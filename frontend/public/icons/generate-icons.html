@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+</head>
+<body>
+    <h2>Right click and save each image:</h2>
+    
+    <h3>Icon 192x192:</h3>
+    <canvas id="icon192" width="192" height="192"></canvas>
+    
+    <h3>Icon 512x512:</h3>
+    <canvas id="icon512" width="512" height="512"></canvas>
+    
+    <h3>Screenshot Wide (1280x720):</h3>
+    <canvas id="screenshot-wide" width="1280" height="720"></canvas>
+    
+    <h3>Screenshot Narrow (750x1334):</h3>
+    <canvas id="screenshot-narrow" width="750" height="1334"></canvas>
+
+    <script>
+        // Draw Icon 192x192
+        const c192 = document.getElementById('icon192');
+        const ctx192 = c192.getContext('2d');
+        ctx192.fillStyle = '#374151';
+        ctx192.fillRect(0, 0, 192, 192);
+        ctx192.fillStyle = 'white';
+        ctx192.font = 'bold 100px Arial';
+        ctx192.textAlign = 'center';
+        ctx192.textBaseline = 'middle';
+        ctx192.fillText('A', 96, 96);
+        
+        // Draw Icon 512x512
+        const c512 = document.getElementById('icon512');
+        const ctx512 = c512.getContext('2d');
+        ctx512.fillStyle = '#374151';
+        ctx512.fillRect(0, 0, 512, 512);
+        ctx512.fillStyle = 'white';
+        ctx512.font = 'bold 280px Arial';
+        ctx512.textAlign = 'center';
+        ctx512.textBaseline = 'middle';
+        ctx512.fillText('A', 256, 256);
+        
+        // Draw Screenshot Wide
+        const cWide = document.getElementById('screenshot-wide');
+        const ctxWide = cWide.getContext('2d');
+        ctxWide.fillStyle = '#f3f4f6';
+        ctxWide.fillRect(0, 0, 1280, 720);
+        ctxWide.fillStyle = '#374151';
+        ctxWide.fillRect(440, 210, 400, 300);
+        ctxWide.fillStyle = 'white';
+        ctxWide.font = 'bold 40px Arial';
+        ctxWide.textAlign = 'center';
+        ctxWide.fillText('My App', 640, 100);
+        ctxWide.font = '20px Arial';
+        ctxWide.fillText('Login Screen', 640, 150);
+        
+        // Draw Screenshot Narrow
+        const cNarrow = document.getElementById('screenshot-narrow');
+        const ctxNarrow = cNarrow.getContext('2d');
+        ctxNarrow.fillStyle = '#f3f4f6';
+        ctxNarrow.fillRect(0, 0, 750, 1334);
+        ctxNarrow.fillStyle = '#374151';
+        ctxNarrow.fillRect(75, 467, 600, 400);
+        ctxNarrow.fillStyle = 'white';
+        ctxNarrow.font = 'bold 50px Arial';
+        ctxNarrow.textAlign = 'center';
+        ctxNarrow.fillText('My App', 375, 200);
+        ctxNarrow.font = '24px Arial';
+        ctxNarrow.fillText('Mobile Login', 375, 280);
+    </script>
+</body>
+</html>

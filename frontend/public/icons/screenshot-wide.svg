@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+    <rect width="1280" height="720" fill="#f3f4f6"/>
+    <rect x="440" y="210" width="400" height="300" rx="20" fill="#374151"/>
+    <text x="640" y="100" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#374151" text-anchor="middle">My App</text>
+    <text x="640" y="150" font-family="Arial, sans-serif" font-size="20" fill="#6b7280" text-anchor="middle">Login Screen</text>
+</svg>
