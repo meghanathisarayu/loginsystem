@@ -4,6 +4,8 @@ import Login from './components/Login';
 import AdminDashboard from './components/AdminDashboard';
 import UserDashboard from './components/UserDashboard';
 import ForgotPassword from './components/ForgotPassword';
+import { Toaster } from 'react-hot-toast';
+
 
 // Simple Protected Route Component
 const ProtectedRoute = ({ children, role }) => {
@@ -23,7 +25,9 @@ const ProtectedRoute = ({ children, role }) => {
 function App() {
   return (
     <Router>
+      <Toaster />
       <Routes>
+
         <Route path="/" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route 

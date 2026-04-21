@@ -40,6 +40,46 @@ body {
   width: 100%;
 }
 
+/* Toast Animations */
+@keyframes enter {
+  from { transform: scale(0.9) translateY(20px); opacity: 0; }
+  to { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+@keyframes leave {
+  from { transform: scale(1) translateY(0); opacity: 1; }
+  to { transform: scale(0.9) translateY(20px); opacity: 0; }
+}
+
+.animate-enter {
+  animation: enter 0.3s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+}
+
+.animate-leave {
+  animation: leave 0.3s cubic-bezier(0.06, 0.71, 0.55, 1) forwards;
+}
+
+/* Utility Classes for Custom Toast */
+.bg-slate-900\/90 { background-color: rgba(15, 23, 42, 0.9); }
+.backdrop-blur-md { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+.rounded-2xl { border-radius: 1rem; }
+.rounded-xl { border-radius: 0.75rem; }
+.ring-1 { ring-width: 1px; }
+.ring-white\/10 { --tw-ring-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 0 1px var(--tw-ring-color); }
+.bg-slate-800 { background-color: #1e293b; }
+.bg-slate-800\/50 { background-color: rgba(30, 41, 59, 0.5); }
+.border-white\/5 { border: 1px solid rgba(255, 255, 255, 0.05); }
+.text-emerald-400 { color: #34d399; }
+.text-blue-400 { color: #60a5fa; }
+.text-rose-400 { color: #fb7185; }
+.text-amber-400 { color: #fbbf24; }
+.text-indigo-400 { color: #818cf8; }
+.text-slate-500 { color: #64748b; }
+.text-slate-400 { color: #94a3b8; }
+.text-slate-300 { color: #cbd5e1; }
+.text-slate-600 { color: #475569; }
+
 .auth-container {
   display: flex;
   justify-content: center;

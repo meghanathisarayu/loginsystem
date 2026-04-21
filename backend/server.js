@@ -1,16 +1,40 @@
 const express = require('express');
-const mysql = require('mysql2');
+const http = require('http');
+const { Server } = require('socket.io');
+
 const cors = require('cors');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const emailjs = require('@emailjs/nodejs');
-const bcrypt = require('bcryptjs');                  
+const bcrypt = require('bcryptjs');
+
+const connectDB = require('./models');
+const User = require('./models/User');
+const ActivityLog = require('./models/ActivityLog');
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 app.use(cors());
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE"]
+    }
+});
+
+io.on('connection', (socket) => {
+    console.log('A client connected:', socket.id);
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
+
+// Connect to MongoDB
+connectDB();
 
 // Temporary store for OTPs
 let otpStore = {};
@@ -19,12 +43,22 @@ let otpStore = {};
 let loginAttempts = {};
 
 // Activity Log Helper Function
-function logActivity(userId, userName, userEmail, action, details = '') {
-    const timestamp = new Date();
-    const query = `INSERT INTO activity_logs (user_id, user_name, user_email, action, details, created_at) VALUES (?, ?, ?, ?, ?, ?)`;
-    db.query(query, [userId, userName, userEmail, action, details, timestamp], (err) => {
-        if (err) console.error('Error logging activity:', err);
-    });
+async function logActivity(userId, userName, userEmail, action, details = '') {
+    try {
+        const log = await ActivityLog.create({
+            userId,
+            userName,
+            userEmail,
+            action,
+            details
+        });
+
+        // Emit the log to all connected clients
+        console.log('--- SOCKET EMITTING ACTIVITY ---', log.action, log.userName);
+        io.emit('new-activity', log);
+    } catch (err) {
+        console.error('Error logging activity:', err);
+    }
 }
 
 // EmailJS initial configuration
@@ -39,24 +73,8 @@ app.use((req, res, next) => {
     next();
 });
 
-// MySQL Connection
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-});
-
-db.connect((err) => {
-    if (err) {
-        console.error('Error connecting to MySQL:', err);
-        return;
-    }
-    console.log('Connected to MySQL database');
-});
-
 // Login API
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -81,13 +99,10 @@ app.post('/api/login', (req, res) => {
         });
     }
 
-    const query = 'SELECT * FROM users WHERE email = ?';
-    db.query(query, [email], async (err, results) => {
-        if (err) return res.status(500).json({ message: 'Internal Server Error', error: err });
+    try {
+        const user = await User.findOne({ email });
 
-        if (results.length > 0) {
-            const user = results[0];
-
+        if (user) {
             // Compare hashed password
             const isMatch = await bcrypt.compare(password, user.password);
 
@@ -96,19 +111,19 @@ app.post('/api/login', (req, res) => {
                 loginAttempts[email] = { count: 0, lockUntil: 0 };
 
                 const token = jwt.sign(
-                    { id: user.id, role: user.role, email: user.email },
+                    { id: user._id, role: user.role, email: user.email },
                     process.env.JWT_SECRET,
                     { expiresIn: '1h' }
                 );
 
                 // Log successful login
-                logActivity(user.id, user.name, user.email, 'LOGIN', 'User logged in successfully');
+                logActivity(user._id, user.name, user.email, 'LOGIN', 'User logged in successfully');
 
                 res.status(200).json({
                     message: 'Login successful',
                     token: token,
                     user: {
-                        id: user.id,
+                        id: user._id,
                         name: user.name,
                         email: user.email,
                         role: user.role
@@ -133,17 +148,24 @@ app.post('/api/login', (req, res) => {
         } else {
             res.status(404).json({ message: 'User not found' });
         }
-    });
+    } catch (err) {
+        console.error('Login error:', err);
+        res.status(500).json({ message: 'Internal Server Error', error: err.message });
+    }
 });
 
 // --- Forgot Password Flow ---
 
 // 1. Request OTP
-app.post('/api/forgot-password', (req, res) => {
+app.post('/api/forgot-password', async (req, res) => {
     const { email } = req.body;
-    db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
-        if (err) return res.status(500).json({ message: 'Database error' });
-        if (results.length === 0) return res.status(404).json({ message: 'No user found with this email' });
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ message: 'No user found with this email' });
+        }
 
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         otpStore[email] = { otp, expires: Date.now() + 600000 }; // 10 mins expiry
@@ -172,7 +194,10 @@ app.post('/api/forgot-password', (req, res) => {
                 otp: otp
             });
         });
-    });
+    } catch (err) {
+        console.error('Forgot password error:', err);
+        res.status(500).json({ message: 'Database error' });
+    }
 });
 
 // 2. Verify OTP
@@ -198,43 +223,74 @@ app.post('/api/reset-password', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(newPassword, 10);
-        db.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email], (err, results) => {
-            if (err) return res.status(500).json({ message: 'Error updating password' });
-            delete otpStore[email]; // Clear OTP after use
-            res.status(200).json({ message: 'Password reset successfully!' });
-        });
+        await User.updateOne({ email }, { password: hashedPassword });
+        delete otpStore[email]; // Clear OTP after use
+        res.status(200).json({ message: 'Password reset successfully!' });
     } catch (err) {
-        res.status(500).json({ message: 'Error hashing password' });
+        console.error('Reset password error:', err);
+        res.status(500).json({ message: 'Error updating password' });
     }
 });
 
 // Activity Logs APIs
 // Get all activity logs
-app.get('/api/activity-logs', (req, res) => {
-    const query = `SELECT * FROM activity_logs ORDER BY created_at DESC LIMIT 500`;
-    db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ message: 'Error fetching activity logs', error: err });
-        res.status(200).json(results);
-    });
+app.get('/api/activity-logs', async (req, res) => {
+    try {
+        const logs = await ActivityLog.find()
+            .sort({ createdAt: -1 })
+            .limit(500);
+        res.status(200).json(logs);
+    } catch (err) {
+        console.error('Error fetching activity logs:', err);
+        res.status(500).json({ message: 'Error fetching activity logs', error: err.message });
+    }
+});
+
+// Clear all activity logs
+app.delete('/api/activity-logs', async (req, res) => {
+    try {
+        await ActivityLog.deleteMany({});
+        // Notify all admins that logs were cleared
+        logActivity('SYSTEM', 'Admin', 'admin@system.com', 'LOGS_CLEARED', 'All activity logs were cleared by an administrator');
+        res.status(200).json({ message: 'All activity logs have been cleared' });
+    } catch (err) {
+        console.error('Error clearing activity logs:', err);
+        res.status(500).json({ message: 'Error clearing activity logs', error: err.message });
+    }
 });
 
 // Get activity logs for specific user
-app.get('/api/activity-logs/user/:userId', (req, res) => {
+app.get('/api/activity-logs/user/:userId', async (req, res) => {
     const { userId } = req.params;
-    const query = `SELECT * FROM activity_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT 100`;
-    db.query(query, [userId], (err, results) => {
-        if (err) return res.status(500).json({ message: 'Error fetching user activity logs', error: err });
-        res.status(200).json(results);
-    });
+    try {
+        const logs = await ActivityLog.find({ userId })
+            .sort({ createdAt: -1 })
+            .limit(100);
+        res.status(200).json(logs);
+    } catch (err) {
+        console.error('Error fetching user activity logs:', err);
+        res.status(500).json({ message: 'Error fetching user activity logs', error: err.message });
+    }
 });
 
 // User Management APIs
 // Get all users
-app.get('/api/users', (req, res) => {
-    db.query('SELECT id, name, email, password, role FROM users', (err, results) => {
-        if (err) return res.status(500).json({ message: 'Error fetching users', error: err });
-        res.status(200).json(results);
-    });
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.find().select('_id name email password role');
+        // Map to match old format with 'id' field
+        const formattedUsers = users.map(u => ({
+            id: u._id,
+            name: u.name,
+            email: u.email,
+            password: u.password,
+            role: u.role
+        }));
+        res.status(200).json(formattedUsers);
+    } catch (err) {
+        console.error('Error fetching users:', err);
+        res.status(500).json({ message: 'Error fetching users', error: err.message });
+    }
 });
 
 // Add new user
@@ -242,20 +298,22 @@ app.post('/api/users', async (req, res) => {
     const { name, email, password, role, performedBy } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        db.query('INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)',
-            [name, email, hashedPassword, role || 'user'], (err, results) => {
-                if (err) {
-                    console.error('SQL Error adding user:', err);
-                    return res.status(500).json({ message: 'Error creating user', error: err.message });
-                }
-                // Log user creation
-                if (performedBy) {
-                    logActivity(performedBy.id, performedBy.name, performedBy.email, 'USER_CREATED', `Created user: ${name} (${email}) with role: ${role || 'user'}`);
-                }
-                res.status(201).json({ message: 'User created successfully', id: results.insertId });
-            });
+        const newUser = await User.create({
+            name,
+            email,
+            password: hashedPassword,
+            role: role || 'user'
+        });
+
+        // Log user creation
+        if (performedBy) {
+            logActivity(performedBy.id, performedBy.name, performedBy.email, 'USER_CREATED', `Created user: ${name} (${email}) with role: ${role || 'user'}`);
+        }
+
+        res.status(201).json({ message: 'User created successfully', id: newUser._id });
     } catch (err) {
-        res.status(500).json({ message: 'Error hashing password' });
+        console.error('Error adding user:', err);
+        res.status(500).json({ message: 'Error creating user', error: err.message });
     }
 });
 
@@ -263,65 +321,64 @@ app.post('/api/users', async (req, res) => {
 app.put('/api/users/:id', async (req, res) => {
     const { name, email, password, role, performedBy } = req.body;
     const { id } = req.params;
+
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        db.query('UPDATE users SET name = ?, email = ?, password = ?, role = ? WHERE id = ?',
-            [name, email, hashedPassword, role, id], (err, results) => {
-                if (err) return res.status(500).json({ message: 'Error updating user', error: err });
-                // Log user update
-                if (performedBy) {
-                    logActivity(performedBy.id, performedBy.name, performedBy.email, 'USER_UPDATED', `Updated user: ${name} (${email})`);
-                }
-                res.status(200).json({ message: 'User updated successfully' });
-            });
+        const updatedUser = await User.findByIdAndUpdate(
+            id,
+            { name, email, password: hashedPassword, role },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Log user update
+        if (performedBy) {
+            logActivity(performedBy.id, performedBy.name, performedBy.email, 'USER_UPDATED', `Updated user: ${name} (${email})`);
+        }
+
+        res.status(200).json({ message: 'User updated successfully' });
     } catch (err) {
-        res.status(500).json({ message: 'Error hashing password' });
+        console.error('Error updating user:', err);
+        res.status(500).json({ message: 'Error updating user', error: err.message });
     }
 });
 
 // Delete user
-app.delete('/api/users/:id', (req, res) => {
+app.delete('/api/users/:id', async (req, res) => {
     const { id } = req.params;
 
-    // Check if the user being deleted is an admin
-    db.query('SELECT role FROM users WHERE id = ?', [id], (err, results) => {
-        if (err) return res.status(500).json({ message: 'Error checking user role', error: err });
+    try {
+        // Check if the user being deleted is an admin
+        const user = await User.findById(id);
 
-        if (results.length === 0) return res.status(404).json({ message: 'User not found' });
-
-        const userRole = results[0].role;
-
-        if (userRole === 'admin') {
-            // Check how many admins are left
-            db.query('SELECT COUNT(*) as adminCount FROM users WHERE role = "admin"', (err, countResults) => {
-                if (err) return res.status(500).json({ message: 'Error checking admin count', error: err });
-
-                if (countResults[0].adminCount <= 1) {
-                    return res.status(400).json({ message: 'Cannot delete the last administrator. At least one admin must exist.' });
-                }
-
-                // Proceed to delete if more than one admin
-                performDelete(id, res);
-            });
-        } else {
-            // Not an admin, just delete
-            performDelete(id, res);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
         }
-    });
 
-    function performDelete(userId, response) {
-        // Get user info before deleting for logging
-        db.query('SELECT name, email FROM users WHERE id = ?', [userId], (err, userResults) => {
-            const userInfo = userResults[0];
-            db.query('DELETE FROM users WHERE id = ?', [userId], (err, results) => {
-                if (err) return response.status(500).json({ message: 'Error deleting user', error: err });
-                // Log user deletion
-                if (req.body.performedBy && userInfo) {
-                    logActivity(req.body.performedBy.id, req.body.performedBy.name, req.body.performedBy.email, 'USER_DELETED', `Deleted user: ${userInfo.name} (${userInfo.email})`);
-                }
-                response.status(200).json({ message: 'User deleted successfully' });
-            });
-        });
+        if (user.role === 'admin') {
+            // Check how many admins are left
+            const adminCount = await User.countDocuments({ role: 'admin' });
+
+            if (adminCount <= 1) {
+                return res.status(400).json({ message: 'Cannot delete the last administrator. At least one admin must exist.' });
+            }
+        }
+
+        // Proceed to delete
+        await User.findByIdAndDelete(id);
+
+        // Log user deletion
+        if (req.body.performedBy) {
+            logActivity(req.body.performedBy.id, req.body.performedBy.name, req.body.performedBy.email, 'USER_DELETED', `Deleted user: ${user.name} (${user.email})`);
+        }
+
+        res.status(200).json({ message: 'User deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        res.status(500).json({ message: 'Error deleting user', error: err.message });
     }
 });
 
@@ -332,6 +389,6 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

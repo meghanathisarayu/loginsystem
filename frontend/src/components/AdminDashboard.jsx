@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, LogOut, Users, Edit2, Trash2, Plus, X, User, Eye, EyeOff, Activity, Clock } from 'lucide-react';
+import ActivityNotification from './ActivityNotification';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -148,6 +149,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="dashboard">
+            <ActivityNotification />
             <nav className="nav">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <ShieldCheck size={32} color="#818cf8" />
@@ -161,6 +163,21 @@ const AdminDashboard = () => {
                         <div style={{ fontWeight: '600' }}>{currentUser?.name}</div>
                         <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{currentUser?.email}</div>
                     </div>
+                    <button 
+                        onClick={() => {
+                            Notification.requestPermission().then(permission => {
+                                if (permission === 'granted') {
+                                    new Notification("Success!", { body: "Desktop notifications are now active on your PC!" });
+                                } else {
+                                    alert('Please allow notification permission in your browser settings.');
+                                }
+                            });
+                        }}
+                        className="btn" 
+                        style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}
+                    >
+                        <Activity size={18} /> Enable Alerts
+                    </button>
                     <button onClick={handleLogout} className="btn" style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
                         <LogOut size={18} />
                     </button>
@@ -266,9 +283,27 @@ const AdminDashboard = () => {
                 <>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                         <h3 style={{ fontSize: '1.5rem', fontWeight: '600' }}>Activity Logs</h3>
-                        <button onClick={fetchActivityLogs} className="btn" style={{ marginTop: 0, width: 'auto', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <Clock size={18} /> Refresh
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.75rem' }}>
+                            <button 
+                                onClick={async () => {
+                                    if (window.confirm('Are you sure you want to clear ALL activity logs? This cannot be undone.')) {
+                                        try {
+                                            await axios.delete('http://127.0.0.1:5000/api/activity-logs');
+                                            fetchActivityLogs();
+                                        } catch (err) {
+                                            alert('Error clearing logs');
+                                        }
+                                    }
+                                }} 
+                                className="btn" 
+                                style={{ marginTop: 0, width: 'auto', padding: '0.75rem 1.5rem', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                            >
+                                <Trash2 size={18} /> Clear All
+                            </button>
+                            <button onClick={fetchActivityLogs} className="btn" style={{ marginTop: 0, width: 'auto', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Clock size={18} /> Refresh
+                            </button>
+                        </div>
                     </div>
 
                     <div className="table-container">
@@ -288,12 +323,12 @@ const AdminDashboard = () => {
                                     {activityLogs.map(log => (
                                         <tr key={log.id}>
                                             <td style={{ fontSize: '0.875rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
-                                                {formatDate(log.created_at)}
+                                                {formatDate(log.createdAt)}
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                    <span style={{ fontWeight: '500' }}>{log.user_name}</span>
-                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{log.user_email}</span>
+                                                    <span style={{ fontWeight: '500' }}>{log.userName}</span>
+                                                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{log.userEmail}</span>
                                                 </div>
                                             </td>
                                             <td>
