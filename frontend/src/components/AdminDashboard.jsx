@@ -13,11 +13,105 @@ import {
     Clock, 
     X, 
     Eye, 
-    EyeOff 
+    EyeOff,
+    Bell,
+    BellRing,
+    BellOff
 } from 'lucide-react';
 import ActivityNotification from './ActivityNotification';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+// Notification Toggle Component
+const NotificationToggle = ({ permission, onPermissionChange }) => {
+    const handleRequestPermission = async () => {
+        if (!('Notification' in window)) {
+            alert('This browser does not support notifications.');
+            return;
+        }
+
+        try {
+            const result = await Notification.requestPermission();
+            onPermissionChange(result);
+            
+            if (result === 'granted') {
+                new Notification('Notifications Enabled!', {
+                    body: 'You will now receive real-time activity alerts.',
+                    icon: '/favicon.svg'
+                });
+            }
+        } catch (err) {
+            console.error('Notification permission error:', err);
+        }
+    };
+
+    if (permission === 'granted') {
+        return (
+            <button 
+                className="btn" 
+                style={{ 
+                    marginTop: 0, 
+                    padding: '0.5rem 1rem', 
+                    width: 'auto', 
+                    background: 'rgba(16, 185, 129, 0.15)', 
+                    color: '#10b981', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem', 
+                    fontSize: '0.75rem',
+                    cursor: 'default'
+                }}
+                title="Notifications are enabled"
+            >
+                <BellRing size={18} /> Alerts On
+            </button>
+        );
+    }
+
+    if (permission === 'denied') {
+        return (
+            <button 
+                onClick={() => alert('Please enable notifications in your browser settings:\n1. Click the lock icon in the address bar\n2. Select "Site settings"\n3. Change Notifications to "Allow"')}
+                className="btn" 
+                style={{ 
+                    marginTop: 0, 
+                    padding: '0.5rem 1rem', 
+                    width: 'auto', 
+                    background: 'rgba(239, 68, 68, 0.15)', 
+                    color: '#f87171', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '0.5rem', 
+                    fontSize: '0.75rem'
+                }}
+                title="Notifications are blocked"
+            >
+                <BellOff size={18} /> Blocked
+            </button>
+        );
+    }
+
+    return (
+        <button 
+            onClick={handleRequestPermission}
+            className="btn" 
+            style={{ 
+                marginTop: 0, 
+                padding: '0.5rem 1rem', 
+                width: 'auto', 
+                background: 'rgba(99, 102, 241, 0.15)', 
+                color: '#818cf8', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                fontSize: '0.75rem'
+            }}
+            title="Click to enable notifications"
+        >
+            <Bell size={18} /> Enable Alerts
+        </button>
+    );
+};
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -31,10 +125,15 @@ const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('users');
     const [activityLogs, setActivityLogs] = useState([]);
     const [logsLoading, setLogsLoading] = useState(false);
+    const [notifPermission, setNotifPermission] = useState('default');
 
     useEffect(() => {
         fetchUsers();
         fetchActivityLogs();
+        // Check notification permission status
+        if ('Notification' in window) {
+            setNotifPermission(Notification.permission);
+        }
     }, []);
 
     const fetchActivityLogs = async () => {
@@ -165,6 +264,38 @@ const AdminDashboard = () => {
     return (
         <div className="dashboard">
             <ActivityNotification />
+            
+            {/* Notification Permission Banner */}
+            {notifPermission !== 'granted' && (
+                <div style={{ 
+                    background: 'rgba(99, 102, 241, 0.1)', 
+                    border: '1px solid rgba(99, 102, 241, 0.3)', 
+                    borderRadius: '12px', 
+                    padding: '1rem 1.5rem', 
+                    marginBottom: '1.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '1rem'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Bell size={20} color="#818cf8" />
+                        <div>
+                            <div style={{ fontWeight: '600', color: '#e2e8f0', fontSize: '0.9rem' }}>
+                                Enable Activity Notifications
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                                Get real-time desktop alerts when users login or make changes
+                            </div>
+                        </div>
+                    </div>
+                    <NotificationToggle 
+                        permission={notifPermission}
+                        onPermissionChange={setNotifPermission}
+                    />
+                </div>
+            )}
+
             <nav className="nav">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <ShieldCheck size={32} color="#818cf8" />
@@ -178,21 +309,10 @@ const AdminDashboard = () => {
                         <div style={{ fontWeight: '600' }}>{currentUser?.name}</div>
                         <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{currentUser?.email}</div>
                     </div>
-                    <button 
-                        onClick={() => {
-                            Notification.requestPermission().then(permission => {
-                                if (permission === 'granted') {
-                                    new Notification("Success!", { body: "Desktop notifications are now active on your PC!" });
-                                } else {
-                                    alert('Please allow notification permission in your browser settings.');
-                                }
-                            });
-                        }}
-                        className="btn" 
-                        style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}
-                    >
-                        <Activity size={18} /> Enable Alerts
-                    </button>
+                    <NotificationToggle 
+                        permission={notifPermission}
+                        onPermissionChange={setNotifPermission}
+                    />
                     <button onClick={handleLogout} className="btn" style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
                         <LogOut size={18} />
                     </button>
