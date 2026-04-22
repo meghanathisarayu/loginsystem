@@ -6,7 +6,7 @@ const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 // Play notification sound - CUSTOMIZE THIS URL WITH YOUR OWN SOUND
 // Default: Online notification sound (replace with your own .mp3 or .wav URL)
-const NOTIFICATION_SOUND_URL = '/notification.mp3';
+const NOTIFICATION_SOUND_URL = '/mixkit-software-interface-back-2575.wav';
 
 const playNotificationSound = () => {
     try {
