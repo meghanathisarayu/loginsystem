@@ -16,7 +16,9 @@ import {
     EyeOff,
     Bell,
     BellRing,
-    BellOff
+    BellOff,
+    Volume2,
+    VolumeX
 } from 'lucide-react';
 import ActivityNotification from './ActivityNotification';
 
@@ -113,6 +115,45 @@ const NotificationToggle = ({ permission, onPermissionChange }) => {
     );
 };
 
+// Sound Toggle Component
+const SoundToggle = ({ enabled, onToggle }) => {
+    const handleToggle = () => {
+        const newValue = !enabled;
+        localStorage.setItem('soundEnabled', newValue.toString());
+        onToggle(newValue);
+        
+        // Preview sound when enabling
+        if (newValue) {
+            const audio = new Audio('/mixkit-software-interface-back-2575.wav');
+            audio.volume = 0.3;
+            audio.play().catch(() => {});
+        }
+    };
+
+    return (
+        <button 
+            onClick={handleToggle}
+            className="btn" 
+            style={{ 
+                marginTop: 0, 
+                padding: '0.5rem 1rem', 
+                width: 'auto', 
+                background: enabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.1)', 
+                color: enabled ? '#10b981' : '#94a3b8', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.5rem', 
+                fontSize: '0.75rem',
+                transition: 'all 0.2s ease'
+            }}
+            title={enabled ? 'Sound alerts are ON' : 'Click to enable sound alerts'}
+        >
+            {enabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+            {enabled ? 'Sound On' : 'Sound Off'}
+        </button>
+    );
+};
+
 const AdminDashboard = () => {
     const navigate = useNavigate();
     const currentUser = JSON.parse(localStorage.getItem('user'));
@@ -127,6 +168,7 @@ const AdminDashboard = () => {
     const [logsLoading, setLogsLoading] = useState(false);
     const [notifPermission, setNotifPermission] = useState('default');
     const [showNotifModal, setShowNotifModal] = useState(false);
+    const [soundEnabled, setSoundEnabled] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -140,6 +182,9 @@ const AdminDashboard = () => {
                 setTimeout(() => setShowNotifModal(true), 1000);
             }
         }
+        // Check sound preference from localStorage
+        const savedSound = localStorage.getItem('soundEnabled') === 'true';
+        setSoundEnabled(savedSound);
     }, []);
 
     const fetchActivityLogs = async () => {
@@ -431,6 +476,10 @@ const AdminDashboard = () => {
                     <NotificationToggle 
                         permission={notifPermission}
                         onPermissionChange={setNotifPermission}
+                    />
+                    <SoundToggle 
+                        enabled={soundEnabled}
+                        onToggle={setSoundEnabled}
                     />
                     <button onClick={handleLogout} className="btn" style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
                         <LogOut size={18} />

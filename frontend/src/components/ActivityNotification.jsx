@@ -58,8 +58,11 @@ const ActivityNotification = () => {
         socket.on('new-activity', (data) => {
             console.log('Background Signal Received:', data);
             
-            // PLAY NOTIFICATION SOUND
-            playNotificationSound();
+            // PLAY NOTIFICATION SOUND (only if enabled by user)
+            const soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+            if (soundEnabled) {
+                playNotificationSound();
+            }
 
             // DESKTOP NOTIFICATION (System Tray)
             if ("Notification" in window && Notification.permission === "granted") {
