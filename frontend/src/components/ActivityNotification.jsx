@@ -4,6 +4,49 @@ import toast from 'react-hot-toast';
 
 const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
+// Play notification sound using Web Audio API
+const playNotificationSound = () => {
+    try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Create oscillator for a pleasant "ding" sound
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Sound configuration - pleasant notification chime
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5 note
+        oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.1); // Drop to A4
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.5);
+        
+        // Second tone for a nicer chime effect
+        const oscillator2 = audioContext.createOscillator();
+        const gainNode2 = audioContext.createGain();
+        
+        oscillator2.connect(gainNode2);
+        gainNode2.connect(audioContext.destination);
+        
+        oscillator2.frequency.setValueAtTime(1100, audioContext.currentTime + 0.1);
+        oscillator2.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.3);
+        
+        gainNode2.gain.setValueAtTime(0.2, audioContext.currentTime + 0.1);
+        gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+        
+        oscillator2.start(audioContext.currentTime + 0.1);
+        oscillator2.stop(audioContext.currentTime + 0.6);
+        
+    } catch (err) {
+        console.error('Audio play error:', err);
+    }
+};
+
 const ActivityNotification = () => {
     useEffect(() => {
         // Use websocket transport for better background reliability
@@ -15,6 +58,9 @@ const ActivityNotification = () => {
 
         socket.on('new-activity', (data) => {
             console.log('Background Signal Received:', data);
+            
+            // PLAY NOTIFICATION SOUND
+            playNotificationSound();
 
             // DESKTOP NOTIFICATION (System Tray)
             if ("Notification" in window && Notification.permission === "granted") {
