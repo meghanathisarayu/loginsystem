@@ -1,8 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, LogOut, Users, Edit2, Trash2, Plus, X, User, Eye, EyeOff, Activity, Clock } from 'lucide-react';
+import axios from 'axios';
+import { 
+    ShieldCheck, 
+    Activity, 
+    LogOut, 
+    Users, 
+    Plus, 
+    Edit2, 
+    Trash2, 
+    User, 
+    Clock, 
+    X, 
+    Eye, 
+    EyeOff 
+} from 'lucide-react';
 import ActivityNotification from './ActivityNotification';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
@@ -25,7 +40,7 @@ const AdminDashboard = () => {
     const fetchActivityLogs = async () => {
         setLogsLoading(true);
         try {
-            const res = await axios.get('http://127.0.0.1:5000/api/activity-logs');
+            const res = await axios.get(`${API_BASE_URL}/api/activity-logs`);
             setActivityLogs(res.data);
         } catch (err) {
             console.error('Error fetching activity logs:', err);
@@ -59,7 +74,7 @@ const AdminDashboard = () => {
 
     const fetchUsers = async () => {
         try {
-            const res = await axios.get('http://127.0.0.1:5000/api/users');
+            const res = await axios.get(`${API_BASE_URL}/api/users`);
             setUsers(res.data);
         } catch (err) {
             console.error('Error fetching users:', err);
@@ -100,12 +115,12 @@ const AdminDashboard = () => {
                 email: currentUser.email
             };
             if (editingUser) {
-                await axios.put(`http://127.0.0.1:5000/api/users/${editingUser.id}`, {
+                await axios.put(`${API_BASE_URL}/api/users/${editingUser.id}`, {
                     ...formData,
                     performedBy
                 });
             } else {
-                await axios.post('http://127.0.0.1:5000/api/users', {
+                await axios.post(`${API_BASE_URL}/api/users`, {
                     ...formData,
                     performedBy
                 });
@@ -136,7 +151,7 @@ const AdminDashboard = () => {
                     name: currentUser.name,
                     email: currentUser.email
                 };
-                await axios.delete(`http://127.0.0.1:5000/api/users/${id}`, {
+                await axios.delete(`${API_BASE_URL}/api/users/${id}`, {
                     data: { performedBy }
                 });
                 fetchUsers();
@@ -288,7 +303,7 @@ const AdminDashboard = () => {
                                 onClick={async () => {
                                     if (window.confirm('Are you sure you want to clear ALL activity logs? This cannot be undone.')) {
                                         try {
-                                            await axios.delete('http://127.0.0.1:5000/api/activity-logs');
+                                            await axios.delete(`${API_BASE_URL}/api/activity-logs`);
                                             fetchActivityLogs();
                                         } catch (err) {
                                             alert('Error clearing logs');

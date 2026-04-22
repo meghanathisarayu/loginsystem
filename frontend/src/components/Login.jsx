@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { LogIn, Mail, Lock, AlertCircle, Eye, EyeOff, Download, Check } from 'lucide-react';
+import axios from 'axios';
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Download, Check } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const Login = () => {
     
@@ -62,7 +64,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const response = await axios.post('http://127.0.0.1:5000/api/login', {
+            const response = await axios.post(`${API_BASE_URL}/api/login`, {
                 email,
                 password
             });

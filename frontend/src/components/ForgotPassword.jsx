@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, ShieldCheck, Lock, ArrowLeft, Send, CheckCircle2 } from 'lucide-react';
+import axios from 'axios';
+import { ShieldCheck, Mail, Lock, CheckCircle2, ArrowLeft, Send } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -18,7 +20,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setError('');
         try {
-            const res = await axios.post('http://127.0.0.1:5000/api/forgot-password', { email });
+            const res = await axios.post(`${API_BASE_URL}/api/forgot-password`, { email });
             setMessage(res.data.message);
             setStep(2);
         } catch (err) {
@@ -33,7 +35,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setError('');
         try {
-            await axios.post('http://127.0.0.1:5000/api/verify-otp', { email, otp });
+            await axios.post(`${API_BASE_URL}/api/verify-otp`, { email, otp });
             setStep(3);
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid OTP');
@@ -47,7 +49,7 @@ const ForgotPassword = () => {
         setLoading(true);
         setError('');
         try {
-            await axios.post('http://127.0.0.1:5000/api/reset-password', { email, otp, newPassword });
+            await axios.post(`${API_BASE_URL}/api/reset-password`, { email, otp, newPassword });
             alert('Password reset successfully!');
             navigate('/');
         } catch (err) {
