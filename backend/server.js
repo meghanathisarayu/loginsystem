@@ -368,7 +368,7 @@ app.post('/api/push/test', async (req, res) => {
     }
 });
 
-// Subscribe to push notifications
+// Subscribe to push notifications (JWT protected - admin only)
 app.post('/api/push/subscribe', async (req, res) => {
     const subscription = req.body;
     
@@ -376,20 +376,37 @@ app.post('/api/push/subscribe', async (req, res) => {
         return res.status(400).json({ message: 'Invalid subscription' });
     }
     
+    // Verify JWT token from Authorization header
+    const authHeader = req.headers.authorization;
+    let userRole = 'user';
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        const token = authHeader.substring(7);
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            userRole = decoded.role || 'user';
+        } catch (err) {
+            console.log('JWT verification failed for push subscribe:', err.message);
+            return res.status(401).json({ message: 'Invalid or expired token' });
+        }
+    } else {
+        return res.status(401).json({ message: 'Authorization token required' });
+    }
+    
     try {
-        // Upsert subscription in MongoDB with role
+        // Upsert subscription in MongoDB with role from JWT (trusted)
         await PushSubscription.findOneAndUpdate(
             { endpoint: subscription.endpoint },
             {
                 endpoint: subscription.endpoint,
                 expirationTime: subscription.expirationTime,
                 keys: subscription.keys,
-                role: subscription.role || 'user'
+                role: userRole
             },
             { upsert: true, new: true }
         );
         
-        console.log('Push subscription saved to MongoDB:', subscription.endpoint.substring(0, 50) + '...');
+        console.log(`Push subscription saved for role: ${userRole}`, subscription.endpoint.substring(0, 50) + '...');
         res.status(201).json({ message: 'Subscribed successfully' });
     } catch (err) {
         console.error('Push subscribe error:', err);
