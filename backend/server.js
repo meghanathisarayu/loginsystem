@@ -341,14 +341,26 @@ app.get('/api/push/vapid-public-key', (req, res) => {
     res.json({ publicKey: VAPID_PUBLIC_KEY });
 });
 
-// Test push notification
+// Test push notification (GET for easy browser testing, POST for proper API calls)
+app.get('/api/push/test', async (req, res) => {
+    try {
+        await sendPushNotification(
+            'Test Notification',
+            'If you see this, push notifications are working!'
+        );
+        res.json({ message: 'Test notification sent via GET' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to send test notification', error: err.message });
+    }
+});
+
 app.post('/api/push/test', async (req, res) => {
     try {
         await sendPushNotification(
             'Test Notification',
             'If you see this, push notifications are working!'
         );
-        res.json({ message: 'Test notification sent' });
+        res.json({ message: 'Test notification sent via POST' });
     } catch (err) {
         res.status(500).json({ message: 'Failed to send test notification', error: err.message });
     }
