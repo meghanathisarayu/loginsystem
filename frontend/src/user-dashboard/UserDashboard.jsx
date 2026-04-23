@@ -1,15 +1,13 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, LogOut, FileText, Bell, CreditCard } from 'lucide-react';
+import { User, FileText, Bell, CreditCard } from 'lucide-react';
+import UserHeader from './components/UserHeader';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-// Unsubscribe from push notifications (users should never receive admin alerts)
 async function unsubscribeFromPushNotifications() {
     try {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            return;
-        }
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
         if (subscription) {
@@ -19,7 +17,6 @@ async function unsubscribeFromPushNotifications() {
                 body: JSON.stringify({ endpoint: subscription.endpoint })
             });
             await subscription.unsubscribe();
-            console.log('User: Push unsubscribed successfully');
         }
     } catch (err) {
         console.error('User: Push unsubscribe error:', err);
@@ -30,7 +27,6 @@ const UserDashboard = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
 
-    // Unsubscribe from push notifications on load (in case admin was logged in before)
     useEffect(() => {
         unsubscribeFromPushNotifications();
     }, []);
@@ -43,24 +39,7 @@ const UserDashboard = () => {
 
     return (
         <div className="dashboard">
-            <nav className="nav">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <LayoutDashboard size={32} color="#4ade80" />
-                    <div>
-                        <h2 style={{ fontSize: '1.25rem' }}>User Dashboard</h2>
-                        <span className="role-badge role-user">Standard User</span>
-                    </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: '600' }}>{user?.name}</div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{user?.email}</div>
-                    </div>
-                    <button onClick={handleLogout} className="btn" style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
-                        <LogOut size={18} />
-                    </button>
-                </div>
-            </nav>
+            <UserHeader user={user} handleLogout={handleLogout} />
 
             <div className="grid">
                 <div className="card">

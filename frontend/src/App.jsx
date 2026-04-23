@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import Login from './components/Login';
-import AdminDashboard from './components/AdminDashboard';
-import UserDashboard from './components/UserDashboard';
-import ForgotPassword from './components/ForgotPassword';
+import Login from './login/Login';
+import AdminDashboard from './admin-dashboard/AdminDashboard';
+import UserDashboard from './user-dashboard/UserDashboard';
+import ForgotPassword from './login/ForgotPassword';
 import { Toaster } from 'react-hot-toast';
 
 
