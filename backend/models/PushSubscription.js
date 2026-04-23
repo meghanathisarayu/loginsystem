@@ -20,6 +20,11 @@ const pushSubscriptionSchema = new mongoose.Schema({
             required: true
         }
     },
+    role: {
+        type: String,
+        default: 'user',
+        enum: ['user', 'admin']
+    },
     createdAt: {
         type: Date,
         default: Date.now

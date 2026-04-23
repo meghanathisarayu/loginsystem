@@ -377,13 +377,14 @@ app.post('/api/push/subscribe', async (req, res) => {
     }
     
     try {
-        // Upsert subscription in MongoDB
+        // Upsert subscription in MongoDB with role
         await PushSubscription.findOneAndUpdate(
             { endpoint: subscription.endpoint },
             {
                 endpoint: subscription.endpoint,
                 expirationTime: subscription.expirationTime,
-                keys: subscription.keys
+                keys: subscription.keys,
+                role: subscription.role || 'user'
             },
             { upsert: true, new: true }
         );
@@ -413,11 +414,11 @@ app.post('/api/push/unsubscribe', async (req, res) => {
 // Send push notification helper
 async function sendPushNotification(title, body, icon = '/favicon.svg') {
     try {
-        // Get all subscriptions from MongoDB
-        const subscriptions = await PushSubscription.find({});
+        // Get only ADMIN subscriptions from MongoDB
+        const subscriptions = await PushSubscription.find({ role: 'admin' });
         
         if (subscriptions.length === 0) {
-            console.log('No push subscriptions found in database');
+            console.log('No admin push subscriptions found in database');
             return;
         }
         
