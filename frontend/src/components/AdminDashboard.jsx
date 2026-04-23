@@ -26,6 +26,30 @@ import ActivityNotification from './ActivityNotification';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
+// Unsubscribe from Push Notifications
+async function unsubscribeFromPushNotifications() {
+    try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            return;
+        }
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            // Remove from backend
+            await fetch(`${API_BASE_URL}/api/push/unsubscribe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: subscription.endpoint })
+            });
+            // Remove from browser
+            await subscription.unsubscribe();
+            console.log('Push unsubscribed successfully');
+        }
+    } catch (err) {
+        console.error('Push unsubscribe error:', err);
+    }
+}
+
 // Subscribe to Push Notifications (for background tabs)
 async function subscribeToPushNotifications() {
     try {
@@ -321,7 +345,8 @@ const AdminDashboard = () => {
         }
     };
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await unsubscribeFromPushNotifications();
         localStorage.clear();
         navigate('/');
     };

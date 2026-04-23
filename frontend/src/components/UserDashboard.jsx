@@ -1,12 +1,42 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, User, LogOut, FileText, Bell, CreditCard } from 'lucide-react';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
+
+// Unsubscribe from push notifications (users should never receive admin alerts)
+async function unsubscribeFromPushNotifications() {
+    try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            return;
+        }
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            await fetch(`${API_BASE_URL}/api/push/unsubscribe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ endpoint: subscription.endpoint })
+            });
+            await subscription.unsubscribe();
+            console.log('User: Push unsubscribed successfully');
+        }
+    } catch (err) {
+        console.error('User: Push unsubscribe error:', err);
+    }
+}
 
 const UserDashboard = () => {
     const navigate = useNavigate();
     const user = JSON.parse(localStorage.getItem('user'));
 
-    const handleLogout = () => {
+    // Unsubscribe from push notifications on load (in case admin was logged in before)
+    useEffect(() => {
+        unsubscribeFromPushNotifications();
+    }, []);
+
+    const handleLogout = async () => {
+        await unsubscribeFromPushNotifications();
         localStorage.clear();
         navigate('/');
     };
