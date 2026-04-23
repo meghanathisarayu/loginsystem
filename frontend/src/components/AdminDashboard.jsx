@@ -51,15 +51,16 @@ async function subscribeToPushNotifications() {
             applicationServerKey: urlBase64ToUint8Array(publicKey)
         });
 
-        // Send subscription to server
+        // Send subscription to server with JWT token
         const currentUser = JSON.parse(localStorage.getItem('user'));
+        const token = localStorage.getItem('token');
         await fetch(`${API_BASE_URL}/api/push/subscribe`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                ...subscription,
-                role: currentUser?.role || 'user'
-            })
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(subscription)
         });
 
         console.log('Push subscription successful');
