@@ -52,10 +52,14 @@ async function subscribeToPushNotifications() {
         });
 
         // Send subscription to server
+        const currentUser = JSON.parse(localStorage.getItem('user'));
         await fetch(`${API_BASE_URL}/api/push/subscribe`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(subscription)
+            body: JSON.stringify({
+                ...subscription,
+                role: currentUser?.role || 'user'
+            })
         });
 
         console.log('Push subscription successful');
