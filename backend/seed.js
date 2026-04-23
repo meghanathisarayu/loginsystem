@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const User = require('./models/User');
+const { User } = require('./common-helpers/database-schemas');
 
 const MONGODB_URI= process.env.MONGODB_URI || 'mongodb://localhost:27017/login_system';
 

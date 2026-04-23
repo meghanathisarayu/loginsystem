@@ -5,11 +5,19 @@ const cors = require('cors');
 const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 
-// Import Feature Logic
+// Import Feature Logic (New Easy Structure)
 dotenv.config();
-const { connectDB } = require('./shared/models');
-const setupLoginFeatures = require('./login/login');
-const setupAdminFeatures = require('./admin-dashboard/admin');
+const { connectDB } = require('./common-helpers/database-schemas');
+
+// Login Flow
+const setupAuthLogin = require('./login-feature/auth-login');
+const setupForgotPassword = require('./login-feature/forgot-password');
+const setupAppInstall = require('./login-feature/app-install-logic');
+
+// Admin Dashboard Flow
+const setupManageUsers = require('./admin-feature/manage-users');
+const setupViewLogs = require('./admin-feature/view-activity-logs');
+const setupNotifications = require('./admin-feature/notification-manager');
 
 const app = express();
 app.use(express.json());
@@ -48,10 +56,14 @@ io.on('connection', (socket) => {
 // Connect Database
 connectDB();
 
-// Main Routes (Matching Frontend Flow)
+// Main Routes (Matching Easy Structure Flow)
 app.get('/', (req, res) => res.json({ status: 'Running' }));
-app.use('/api', setupLoginFeatures(io));
-app.use('/api', setupAdminFeatures(io));
+app.use('/api', setupAuthLogin(io));
+app.use('/api', setupForgotPassword());
+app.use('/api', setupAppInstall());
+app.use('/api', setupManageUsers(io));
+app.use('/api', setupViewLogs(io));
+app.use('/api', setupNotifications());
 
 app.use((req, res) => res.status(404).json({ message: 'Not found' }));
 

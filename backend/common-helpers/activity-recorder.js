@@ -1,5 +1,5 @@
-const { ActivityLog } = require('./models');
-const { sendPushNotification } = require('./push');
+const { ActivityLog } = require('./database-schemas');
+const { sendPushNotification } = require('./push-setup');
 
 const logActivity = async (io, userId, userName, userEmail, action, details = '') => {
     try {

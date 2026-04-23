@@ -1,5 +1,5 @@
 const webpush = require('web-push');
-const { PushSubscription } = require('./models');
+const { PushSubscription } = require('./database-schemas');
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
