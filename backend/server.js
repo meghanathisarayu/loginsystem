@@ -12,6 +12,7 @@ const webpush = require('web-push');
 const connectDB = require('./models');
 const User = require('./models/User');
 const ActivityLog = require('./models/ActivityLog');
+const PushSubscription = require('./models/PushSubscription');
 
 dotenv.config();
 
@@ -28,8 +29,7 @@ if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
     console.log('Web Push VAPID configured');
 }
 
-// Store push subscriptions (in production, use MongoDB)
-let pushSubscriptions = [];
+// Push subscriptions now stored in MongoDB for persistence
 
 const app = express();
 app.use(express.json());
@@ -341,68 +341,90 @@ app.get('/api/push/vapid-public-key', (req, res) => {
 });
 
 // Subscribe to push notifications
-app.post('/api/push/subscribe', (req, res) => {
+app.post('/api/push/subscribe', async (req, res) => {
     const subscription = req.body;
     
     if (!subscription || !subscription.endpoint) {
         return res.status(400).json({ message: 'Invalid subscription' });
     }
     
-    // Check if already subscribed
-    const exists = pushSubscriptions.some(
-        sub => sub.endpoint === subscription.endpoint
-    );
-    
-    if (!exists) {
-        pushSubscriptions.push(subscription);
-        console.log('New push subscription added:', subscription.endpoint.substring(0, 50) + '...');
+    try {
+        // Upsert subscription in MongoDB
+        await PushSubscription.findOneAndUpdate(
+            { endpoint: subscription.endpoint },
+            {
+                endpoint: subscription.endpoint,
+                expirationTime: subscription.expirationTime,
+                keys: subscription.keys
+            },
+            { upsert: true, new: true }
+        );
+        
+        console.log('Push subscription saved to MongoDB:', subscription.endpoint.substring(0, 50) + '...');
+        res.status(201).json({ message: 'Subscribed successfully' });
+    } catch (err) {
+        console.error('Push subscribe error:', err);
+        res.status(500).json({ message: 'Failed to save subscription' });
     }
-    
-    res.status(201).json({ message: 'Subscribed successfully' });
 });
 
 // Unsubscribe from push notifications
-app.post('/api/push/unsubscribe', (req, res) => {
+app.post('/api/push/unsubscribe', async (req, res) => {
     const { endpoint } = req.body;
     
-    pushSubscriptions = pushSubscriptions.filter(
-        sub => sub.endpoint !== endpoint
-    );
-    
-    console.log('Push subscription removed');
-    res.status(200).json({ message: 'Unsubscribed successfully' });
+    try {
+        await PushSubscription.deleteOne({ endpoint });
+        console.log('Push subscription removed from MongoDB');
+        res.status(200).json({ message: 'Unsubscribed successfully' });
+    } catch (err) {
+        console.error('Push unsubscribe error:', err);
+        res.status(500).json({ message: 'Failed to remove subscription' });
+    }
 });
 
 // Send push notification helper
 async function sendPushNotification(title, body, icon = '/favicon.svg') {
-    if (pushSubscriptions.length === 0) return;
-    
-    const payload = JSON.stringify({
-        title: title || 'Admin Alert',
-        body: body || 'New activity detected',
-        icon: icon,
-        badge: '/icons/icon-192x192.png',
-        tag: 'activity-' + Date.now(),
-        requireInteraction: true
-    });
-    
-    const results = await Promise.allSettled(
-        pushSubscriptions.map(sub => 
-            webpush.sendNotification(sub, payload).catch(err => {
-                console.error('Push send error:', err.statusCode, err.body);
-                // Remove invalid subscriptions
-                if (err.statusCode === 410 || err.statusCode === 404) {
-                    pushSubscriptions = pushSubscriptions.filter(
-                        s => s.endpoint !== sub.endpoint
-                    );
-                }
-                throw err;
-            })
-        )
-    );
-    
-    const successCount = results.filter(r => r.status === 'fulfilled').length;
-    console.log(`Push notifications sent: ${successCount}/${pushSubscriptions.length}`);
+    try {
+        // Get all subscriptions from MongoDB
+        const subscriptions = await PushSubscription.find({});
+        
+        if (subscriptions.length === 0) {
+            console.log('No push subscriptions found in database');
+            return;
+        }
+        
+        const payload = JSON.stringify({
+            title: title || 'Admin Alert',
+            body: body || 'New activity detected',
+            icon: icon,
+            badge: '/icons/icon-192x192.png',
+            tag: 'activity-' + Date.now(),
+            requireInteraction: true
+        });
+        
+        const results = await Promise.allSettled(
+            subscriptions.map(sub => 
+                webpush.sendNotification({
+                    endpoint: sub.endpoint,
+                    expirationTime: sub.expirationTime,
+                    keys: sub.keys
+                }, payload).catch(async (err) => {
+                    console.error('Push send error:', err.statusCode, err.message);
+                    // Remove invalid/expired subscriptions from DB
+                    if (err.statusCode === 410 || err.statusCode === 404) {
+                        await PushSubscription.deleteOne({ endpoint: sub.endpoint });
+                        console.log('Removed expired subscription from DB');
+                    }
+                    throw err;
+                })
+            )
+        );
+        
+        const successCount = results.filter(r => r.status === 'fulfilled').length;
+        console.log(`Push notifications sent: ${successCount}/${subscriptions.length}`);
+    } catch (err) {
+        console.error('sendPushNotification error:', err.message);
+    }
 }
 
 // User Management APIs
