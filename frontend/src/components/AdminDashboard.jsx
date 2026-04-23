@@ -18,7 +18,9 @@ import {
     BellRing,
     BellOff,
     Volume2,
-    VolumeX
+    VolumeX,
+    Smartphone,
+    Home
 } from 'lucide-react';
 import ActivityNotification from './ActivityNotification';
 
@@ -224,6 +226,8 @@ const AdminDashboard = () => {
     const [notifPermission, setNotifPermission] = useState('default');
     const [showNotifModal, setShowNotifModal] = useState(false);
     const [soundEnabled, setSoundEnabled] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    const [isPwa, setIsPwa] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -240,6 +244,15 @@ const AdminDashboard = () => {
         // Check sound preference from localStorage
         const savedSound = localStorage.getItem('soundEnabled') === 'true';
         setSoundEnabled(savedSound);
+        
+        // Check if mobile and if already installed as PWA
+        const mobileCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        setIsMobile(mobileCheck);
+        
+        // Check if running as installed PWA
+        const pwaCheck = window.matchMedia('(display-mode: standalone)').matches || 
+                        window.navigator.standalone === true;
+        setIsPwa(pwaCheck);
     }, []);
 
     const fetchActivityLogs = async () => {
@@ -370,6 +383,35 @@ const AdminDashboard = () => {
     return (
         <div className="dashboard">
             <ActivityNotification />
+
+            {/* Mobile PWA Install Banner */}
+            {isMobile && !isPwa && (
+                <div style={{ 
+                    background: 'rgba(99, 102, 241, 0.1)', 
+                    border: '1px solid rgba(99, 102, 241, 0.3)', 
+                    borderRadius: '12px', 
+                    padding: '1rem 1.5rem', 
+                    marginBottom: '1.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '1rem'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <Smartphone size={20} color="#818cf8" />
+                        <div>
+                            <div style={{ fontWeight: '600', color: '#e2e8f0', fontSize: '0.9rem' }}>
+                                Install App for Background Notifications
+                            </div>
+                            <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
+                                {navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') 
+                                    ? 'Safari: Tap Share → Add to Home Screen' 
+                                    : 'Chrome: Tap 3 dots → Add to Home Screen'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Notification Permission Modal */}
             {showNotifModal && notifPermission === 'default' && (
