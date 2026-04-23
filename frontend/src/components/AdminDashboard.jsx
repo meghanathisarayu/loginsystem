@@ -367,8 +367,8 @@ const AdminDashboard = () => {
             fetchActivityLogs();
             handleCloseModal();
         } catch (err) {
-            const msg = err.response?.data?.message || err.message || 'Error saving user';
-            alert('Error saving user: ' + msg);
+            const backendMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Unknown error';
+            alert('Error saving user: ' + backendMsg);
             console.error('Save user error:', err);
         }
     };
