@@ -36,6 +36,7 @@ app.use(express.json());
 // CORS setup - allow multiple frontend URLs (dev + production)
 const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5174',
     'http://localhost:3000',
     'https://loginsystem-9sss.vercel.app',
     'https://loginsystem-teal-rho.vercel.app',
