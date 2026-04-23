@@ -37,7 +37,8 @@ app.use(express.json());
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:3000',
-    'https://loginsystem-9sss.vercel.app'
+    'https://loginsystem-9sss.vercel.app',
+    'https://loginsystem-teal-rho.vercel.app'
 ];
 // Also add from env if set
 if (process.env.FRONTEND_URL) {
