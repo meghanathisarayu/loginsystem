@@ -73,6 +73,21 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
     console.log('A client connected:', socket.id);
+    
+    // Allow admins to join a private room
+    socket.on('join-admin-room', (token) => {
+        if (!token) return;
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            if (decoded.role === 'admin') {
+                socket.join('admins');
+                console.log(`Socket ${socket.id} joined admins room`);
+            }
+        } catch (err) {
+            console.log('Socket join room auth failed');
+        }
+    });
+
     socket.on('disconnect', () => {
         console.log('Client disconnected:', socket.id);
     });
@@ -98,9 +113,9 @@ async function logActivity(userId, userName, userEmail, action, details = '') {
             details
         });
 
-        // Emit the log to all connected clients (Socket.IO - active tabs)
-        console.log('--- SOCKET EMITTING ACTIVITY ---', log.action, log.userName);
-        io.emit('new-activity', log);
+        // Emit the log to ADMINS ONLY (Socket.IO - active tabs)
+        console.log('--- SOCKET EMITTING ACTIVITY TO ADMINS ---', log.action, log.userName);
+        io.to('admins').emit('new-activity', log);
         
         // Send Push Notification (background/closed tabs)
         const pushTitle = `Alert: ${log.action}`;

@@ -23,89 +23,11 @@ import {
     Home
 } from 'lucide-react';
 import ActivityNotification from './ActivityNotification';
+import { subscribeToPushNotifications, unsubscribeFromPushNotifications } from '../utils/push';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
-// Unsubscribe from Push Notifications
-async function unsubscribeFromPushNotifications() {
-    try {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            return;
-        }
-        const registration = await navigator.serviceWorker.ready;
-        const subscription = await registration.pushManager.getSubscription();
-        if (subscription) {
-            // Remove from backend
-            await fetch(`${API_BASE_URL}/api/push/unsubscribe`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ endpoint: subscription.endpoint })
-            });
-            // Remove from browser
-            await subscription.unsubscribe();
-            console.log('Push unsubscribed successfully');
-        }
-    } catch (err) {
-        console.error('Push unsubscribe error:', err);
-    }
-}
-
-// Subscribe to Push Notifications (for background tabs)
-async function subscribeToPushNotifications() {
-    try {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            console.log('Push notifications not supported');
-            return;
-        }
-
-        const registration = await navigator.serviceWorker.ready;
-        
-        // Get VAPID public key from server
-        const response = await fetch(`${API_BASE_URL}/api/push/vapid-public-key`);
-        const { publicKey } = await response.json();
-        
-        if (!publicKey) {
-            console.log('No VAPID key available');
-            return;
-        }
-
-        // Subscribe
-        const subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(publicKey)
-        });
-
-        // Send subscription to server with JWT token
-        const currentUser = JSON.parse(localStorage.getItem('user'));
-        const token = localStorage.getItem('token');
-        await fetch(`${API_BASE_URL}/api/push/subscribe`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(subscription)
-        });
-
-        console.log('Push subscription successful');
-    } catch (err) {
-        console.error('Push subscription error:', err);
-    }
-}
-
-// Helper to convert VAPID key
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding)
-        .replace(/\-/g, '+')
-        .replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
-    return outputArray;
-}
+// Redundant functions removed as they are now in ../utils/push.js
 
 // Notification Toggle Component
 const NotificationToggle = ({ permission, onPermissionChange }) => {
@@ -267,9 +189,15 @@ const AdminDashboard = () => {
         if ('Notification' in window) {
             const perm = Notification.permission;
             setNotifPermission(perm);
+            
             // Show modal if permission not yet decided
             if (perm === 'default') {
                 setTimeout(() => setShowNotifModal(true), 1000);
+            } 
+            // AUTOMATICALLY SUBSCRIBE if already granted 
+            // This ensures the backend always has the latest endpoint for this browser
+            else if (perm === 'granted') {
+                subscribeToPushNotifications();
             }
         }
         // Check sound preference from localStorage
@@ -665,14 +593,15 @@ const AdminDashboard = () => {
                     <button 
                         onClick={() => {
                             if ("Notification" in window && Notification.permission === "granted") {
-                                // Simulate a notification after 3 seconds so user can switch tabs
-                                toast.success("Test alert coming in 3s... switch tabs now!");
-                                setTimeout(() => {
-                                    new Notification("Test Admin Alert", {
-                                        body: "This is a test notification to verify background alerts.",
-                                        icon: "/favicon.svg",
-                                        requireInteraction: true
-                                    });
+                                // Trigger a real Push Notification from the server to test background delivery
+                                toast.success("Push alert coming in 3s... switch tabs or close app now!");
+                                setTimeout(async () => {
+                                    try {
+                                        await axios.post(`${API_BASE_URL}/api/push/test`);
+                                    } catch (err) {
+                                        console.error('Push test failed:', err);
+                                        toast.error("Push test failed. Check console.");
+                                    }
                                 }, 3000);
                             } else {
                                 alert("Please enable notifications first using the button on the left.");

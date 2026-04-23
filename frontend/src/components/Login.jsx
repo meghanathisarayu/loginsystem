@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Mail, Lock, Eye, EyeOff, AlertCircle, Download, Check } from 'lucide-react';
+import { subscribeToPushNotifications } from '../utils/push';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -85,6 +86,20 @@ const Login = () => {
             const { user, token } = response.data;
             localStorage.setItem('token', token);
             localStorage.setItem('user', JSON.stringify(user));
+
+            // AUTOMATIC PUSH SUBSCRIPTION FOR ADMINS
+            if (user.role === 'admin' && 'serviceWorker' in navigator && 'PushManager' in window) {
+                try {
+                    if (Notification.permission === 'granted') {
+                        await subscribeToPushNotifications();
+                        console.log('Admin auto-subscribed to push notifications');
+                    } else {
+                        console.log('Notification permission not granted yet for push');
+                    }
+                } catch (err) {
+                    console.log('Push auto-subscribe error:', err.message);
+                }
+            }
 
             if (user.role === 'admin') {
                 navigate('/admin');

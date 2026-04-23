@@ -25,6 +25,12 @@ const ActivityNotification = () => {
     const intervalRef = useRef(null);
 
     useEffect(() => {
+        // Only initialize for admins
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'admin') {
+            return;
+        }
+
         // Use websocket transport for better background reliability
         const socket = io(SOCKET_URL, {
             transports: ['websocket'],
@@ -34,7 +40,11 @@ const ActivityNotification = () => {
         });
 
         socket.on('connect', () => {
-            console.log('Socket connected for notifications');
+            console.log('Socket connected for admin notifications');
+            const token = localStorage.getItem('token');
+            if (token) {
+                socket.emit('join-admin-room', token);
+            }
         });
 
         socket.on('new-activity', (data) => {
