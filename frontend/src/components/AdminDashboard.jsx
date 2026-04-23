@@ -24,6 +24,58 @@ import ActivityNotification from './ActivityNotification';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
+// Subscribe to Push Notifications (for background tabs)
+async function subscribeToPushNotifications() {
+    try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            console.log('Push notifications not supported');
+            return;
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Get VAPID public key from server
+        const response = await fetch(`${API_BASE_URL}/api/push/vapid-public-key`);
+        const { publicKey } = await response.json();
+        
+        if (!publicKey) {
+            console.log('No VAPID key available');
+            return;
+        }
+
+        // Subscribe
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+
+        // Send subscription to server
+        await fetch(`${API_BASE_URL}/api/push/subscribe`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(subscription)
+        });
+
+        console.log('Push subscription successful');
+    } catch (err) {
+        console.error('Push subscription error:', err);
+    }
+}
+
+// Helper to convert VAPID key
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
 // Notification Toggle Component
 const NotificationToggle = ({ permission, onPermissionChange }) => {
     const handleRequestPermission = async () => {
@@ -41,6 +93,9 @@ const NotificationToggle = ({ permission, onPermissionChange }) => {
                     body: 'You will now receive real-time activity alerts.',
                     icon: '/favicon.svg'
                 });
+                
+                // Also subscribe to push notifications for background tabs
+                await subscribeToPushNotifications();
             }
         } catch (err) {
             console.error('Notification permission error:', err);
@@ -385,6 +440,9 @@ const AdminDashboard = () => {
                                                 body: 'You will now receive real-time activity alerts.',
                                                 icon: '/favicon.svg'
                                             });
+                                            
+                                            // Also subscribe to push notifications for background tabs
+                                            await subscribeToPushNotifications();
                                         }
                                     } catch (err) {
                                         console.error('Notification permission error:', err);
@@ -432,8 +490,8 @@ const AdminDashboard = () => {
             {/* Notification Permission Banner */}
             {notifPermission !== 'granted' && (
                 <div style={{ 
-                    background: 'rgba(99, 102, 241, 0.1)', 
-                    border: '1px solid rgba(99, 102, 241, 0.3)', 
+                    background: 'rgba(245, 158, 11, 0.1)', 
+                    border: '1px solid rgba(245, 158, 11, 0.3)', 
                     borderRadius: '12px', 
                     padding: '1rem 1.5rem', 
                     marginBottom: '1.5rem',
@@ -443,13 +501,13 @@ const AdminDashboard = () => {
                     gap: '1rem'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <Bell size={20} color="#818cf8" />
+                        <BellRing size={20} color="#f59e0b" />
                         <div>
-                            <div style={{ fontWeight: '600', color: '#e2e8f0', fontSize: '0.9rem' }}>
-                                Enable Activity Notifications
+                            <div style={{ fontWeight: '600', color: '#fef3c7', fontSize: '0.9rem' }}>
+                                Critical: Background Notifications Disabled
                             </div>
                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-                                Get real-time desktop alerts when users login or make changes
+                                You won't receive alerts if you switch to another tab. Please enable notifications for full admin monitoring.
                             </div>
                         </div>
                     </div>
@@ -481,6 +539,38 @@ const AdminDashboard = () => {
                         enabled={soundEnabled}
                         onToggle={setSoundEnabled}
                     />
+                    <button 
+                        onClick={() => {
+                            if ("Notification" in window && Notification.permission === "granted") {
+                                // Simulate a notification after 3 seconds so user can switch tabs
+                                toast.success("Test alert coming in 3s... switch tabs now!");
+                                setTimeout(() => {
+                                    new Notification("Test Admin Alert", {
+                                        body: "This is a test notification to verify background alerts.",
+                                        icon: "/favicon.svg",
+                                        requireInteraction: true
+                                    });
+                                }, 3000);
+                            } else {
+                                alert("Please enable notifications first using the button on the left.");
+                            }
+                        }}
+                        className="btn"
+                        style={{ 
+                            marginTop: 0, 
+                            padding: '0.5rem 1rem', 
+                            width: 'auto', 
+                            background: 'rgba(99, 102, 241, 0.1)', 
+                            color: '#818cf8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.75rem'
+                        }}
+                        title="Test if notifications work in background"
+                    >
+                        <BellRing size={16} /> Test BG
+                    </button>
                     <button onClick={handleLogout} className="btn" style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
                         <LogOut size={18} />
                     </button>

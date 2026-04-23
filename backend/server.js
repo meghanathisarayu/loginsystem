@@ -7,12 +7,29 @@ const dotenv = require('dotenv');
 const jwt = require('jsonwebtoken');
 const emailjs = require('@emailjs/nodejs');
 const bcrypt = require('bcryptjs');
+const webpush = require('web-push');
 
 const connectDB = require('./models');
 const User = require('./models/User');
 const ActivityLog = require('./models/ActivityLog');
 
 dotenv.config();
+
+// Setup Web Push
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
+
+if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
+    webpush.setVapidDetails(
+        'mailto:admin@loginsystem.com',
+        VAPID_PUBLIC_KEY,
+        VAPID_PRIVATE_KEY
+    );
+    console.log('Web Push VAPID configured');
+}
+
+// Store push subscriptions (in production, use MongoDB)
+let pushSubscriptions = [];
 
 const app = express();
 app.use(express.json());
@@ -78,9 +95,16 @@ async function logActivity(userId, userName, userEmail, action, details = '') {
             details
         });
 
-        // Emit the log to all connected clients
+        // Emit the log to all connected clients (Socket.IO - active tabs)
         console.log('--- SOCKET EMITTING ACTIVITY ---', log.action, log.userName);
         io.emit('new-activity', log);
+        
+        // Send Push Notification (background/closed tabs)
+        const pushTitle = `Alert: ${log.action}`;
+        const pushBody = `${log.userName}${log.details ? ' - ' + log.details : ''}`;
+        sendPushNotification(pushTitle, pushBody).catch(err => {
+            console.error('Push notification error:', err.message);
+        });
     } catch (err) {
         console.error('Error logging activity:', err);
     }
@@ -306,6 +330,80 @@ app.get('/api/activity-logs/user/:userId', async (req, res) => {
         res.status(500).json({ message: 'Error fetching user activity logs', error: err.message });
     }
 });
+
+// ===========================================
+// PUSH NOTIFICATION APIs
+// ===========================================
+
+// Get VAPID public key
+app.get('/api/push/vapid-public-key', (req, res) => {
+    res.json({ publicKey: VAPID_PUBLIC_KEY });
+});
+
+// Subscribe to push notifications
+app.post('/api/push/subscribe', (req, res) => {
+    const subscription = req.body;
+    
+    if (!subscription || !subscription.endpoint) {
+        return res.status(400).json({ message: 'Invalid subscription' });
+    }
+    
+    // Check if already subscribed
+    const exists = pushSubscriptions.some(
+        sub => sub.endpoint === subscription.endpoint
+    );
+    
+    if (!exists) {
+        pushSubscriptions.push(subscription);
+        console.log('New push subscription added:', subscription.endpoint.substring(0, 50) + '...');
+    }
+    
+    res.status(201).json({ message: 'Subscribed successfully' });
+});
+
+// Unsubscribe from push notifications
+app.post('/api/push/unsubscribe', (req, res) => {
+    const { endpoint } = req.body;
+    
+    pushSubscriptions = pushSubscriptions.filter(
+        sub => sub.endpoint !== endpoint
+    );
+    
+    console.log('Push subscription removed');
+    res.status(200).json({ message: 'Unsubscribed successfully' });
+});
+
+// Send push notification helper
+async function sendPushNotification(title, body, icon = '/favicon.svg') {
+    if (pushSubscriptions.length === 0) return;
+    
+    const payload = JSON.stringify({
+        title: title || 'Admin Alert',
+        body: body || 'New activity detected',
+        icon: icon,
+        badge: '/icons/icon-192x192.png',
+        tag: 'activity-' + Date.now(),
+        requireInteraction: true
+    });
+    
+    const results = await Promise.allSettled(
+        pushSubscriptions.map(sub => 
+            webpush.sendNotification(sub, payload).catch(err => {
+                console.error('Push send error:', err.statusCode, err.body);
+                // Remove invalid subscriptions
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                    pushSubscriptions = pushSubscriptions.filter(
+                        s => s.endpoint !== sub.endpoint
+                    );
+                }
+                throw err;
+            })
+        )
+    );
+    
+    const successCount = results.filter(r => r.status === 'fulfilled').length;
+    console.log(`Push notifications sent: ${successCount}/${pushSubscriptions.length}`);
+}
 
 // User Management APIs
 // Get all users
