@@ -228,6 +228,8 @@ const AdminDashboard = () => {
     const [soundEnabled, setSoundEnabled] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [isPwa, setIsPwa] = useState(false);
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+    const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -253,6 +255,19 @@ const AdminDashboard = () => {
         const pwaCheck = window.matchMedia('(display-mode: standalone)').matches || 
                         window.navigator.standalone === true;
         setIsPwa(pwaCheck);
+        
+        // Listen for PWA install prompt (Android Chrome)
+        const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+            setShowInstallPrompt(true);
+        };
+        
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        
+        return () => {
+            window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        };
     }, []);
 
     const fetchActivityLogs = async () => {
@@ -384,8 +399,8 @@ const AdminDashboard = () => {
         <div className="dashboard">
             <ActivityNotification />
 
-            {/* Mobile PWA Install Banner */}
-            {isMobile && !isPwa && (
+            {/* PWA Install Banner */}
+            {!isPwa && (
                 <div style={{ 
                     background: 'rgba(99, 102, 241, 0.1)', 
                     border: '1px solid rgba(99, 102, 241, 0.3)', 
@@ -398,18 +413,52 @@ const AdminDashboard = () => {
                     gap: '1rem'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <Smartphone size={20} color="#818cf8" />
+                        <Home size={20} color="#818cf8" />
                         <div>
                             <div style={{ fontWeight: '600', color: '#e2e8f0', fontSize: '0.9rem' }}>
                                 Install App for Background Notifications
                             </div>
                             <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: '0.25rem' }}>
-                                {navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad') 
-                                    ? 'Safari: Tap Share → Add to Home Screen' 
-                                    : 'Chrome: Tap 3 dots → Add to Home Screen'}
+                                {isMobile 
+                                    ? (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')
+                                        ? 'Safari: Tap Share button → Add to Home Screen'
+                                        : 'Tap "Install App" button below')
+                                    : 'Click "Install App" to add to desktop'
+                                }
                             </div>
                         </div>
                     </div>
+                    {showInstallPrompt && deferredPrompt && (
+                        <button
+                            onClick={async () => {
+                                deferredPrompt.prompt();
+                                const { outcome } = await deferredPrompt.userChoice;
+                                if (outcome === 'accepted') {
+                                    console.log('PWA installed');
+                                }
+                                setDeferredPrompt(null);
+                                setShowInstallPrompt(false);
+                            }}
+                            className="btn"
+                            style={{ 
+                                marginTop: 0, 
+                                padding: '0.5rem 1rem', 
+                                width: 'auto', 
+                                background: 'linear-gradient(135deg, #6366f1 0%, #818cf8 100%)',
+                                color: 'white',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                fontSize: '0.8rem',
+                                fontWeight: '600',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <Home size={16} /> Install App
+                        </button>
+                    )}
                 </div>
             )}
 
