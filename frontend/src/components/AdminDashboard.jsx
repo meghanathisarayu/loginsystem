@@ -362,7 +362,9 @@ const AdminDashboard = () => {
             fetchActivityLogs();
             handleCloseModal();
         } catch (err) {
-            alert('Error saving user');
+            const msg = err.response?.data?.message || err.message || 'Error saving user';
+            alert('Error saving user: ' + msg);
+            console.error('Save user error:', err);
         }
     };
 
