@@ -17,14 +17,17 @@ const Login = () => {
     const [isInstalled, setIsInstalled] = useState(false);
     const navigate = useNavigate();
 
-    // Auto-redirect if ADMIN is already logged in (users must login every time)
+    // Auto-redirect if already logged in (admin or user)
     useEffect(() => {
         const user = JSON.parse(localStorage.getItem('user'));
         const token = localStorage.getItem('token');
-        if (user && token && user.role === 'admin') {
-            navigate('/admin');
+        if (user && token) {
+            if (user.role === 'admin') {
+                navigate('/admin');
+            } else {
+                navigate('/user');
+            }
         }
-        // Regular users stay on login page — they must login again
     }, [navigate]);
 
     // PWA Install Prompt Handling
