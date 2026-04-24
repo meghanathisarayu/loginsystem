@@ -56,26 +56,10 @@ const ActivityNotification = () => {
                 playNotificationSound();
             }
 
-            // 2. SYSTEM DESKTOP NOTIFICATION
-            // This is the most important part for background tabs
-            if ("Notification" in window && Notification.permission === "granted") {
-                try {
-                    const notification = new Notification(`Admin Alert: ${data.action}`, {
-                        body: `${data.userName}: ${data.details || 'New activity logged'}`,
-                        icon: '/favicon.svg',
-                        tag: 'admin-activity', // Use a constant tag to group notifications
-                        renotify: true,
-                        requireInteraction: true // Keeps it on screen until user interacts
-                    });
+            // 2. SYSTEM DESKTOP NOTIFICATION (Removed to prevent double notifications)
+            // Desktop notifications are now handled exclusively by the Service Worker (Web Push)
+            // so we don't need to manually trigger them here.
 
-                    notification.onclick = () => {
-                        window.focus();
-                        notification.close();
-                    };
-                } catch (err) {
-                    console.error("System Notification Error:", err);
-                }
-            }
 
             // 3. TAB TITLE FLASHING (If tab is hidden)
             if (document.visibilityState === 'hidden') {
