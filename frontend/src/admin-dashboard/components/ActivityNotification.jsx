@@ -56,9 +56,35 @@ const ActivityNotification = () => {
                 playNotificationSound();
             }
 
-            // 2. SYSTEM DESKTOP NOTIFICATION (Removed to prevent double notifications)
-            // Desktop notifications are now handled exclusively by the Service Worker (Web Push)
-            // so we don't need to manually trigger them here.
+            // 2. SYSTEM DESKTOP NOTIFICATION (Restored)
+            if ("Notification" in window && Notification.permission === "granted") {
+                try {
+                    // Prevent double notifications by checking a quick flag in sessionStorage
+                    // or just using a unique tag based on the event data.
+                    const notifId = data._id || Date.now().toString();
+                    if (!window.sessionStorage.getItem(`notif_${notifId}`)) {
+                        window.sessionStorage.setItem(`notif_${notifId}`, 'true');
+                        
+                        const notification = new Notification(`Admin Alert: ${data.action}`, {
+                            body: `${data.userName}: ${data.details || 'New activity logged'}`,
+                            icon: '/favicon.svg',
+                            tag: `admin-activity-${notifId}`,
+                            renotify: false,
+                            requireInteraction: true
+                        });
+
+                        notification.onclick = () => {
+                            window.focus();
+                            notification.close();
+                        };
+                        
+                        // Clear the flag after a few seconds so memory doesn't leak
+                        setTimeout(() => window.sessionStorage.removeItem(`notif_${notifId}`), 5000);
+                    }
+                } catch (err) {
+                    console.error("System Notification Error:", err);
+                }
+            }
 
 
             // 3. TAB TITLE FLASHING (If tab is hidden)
