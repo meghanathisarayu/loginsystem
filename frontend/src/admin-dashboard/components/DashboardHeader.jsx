@@ -32,13 +32,8 @@ const NotificationToggle = ({ permission, onPermissionChange, onSubscribe }) => 
     if (permission === 'granted') {
         return (
             <button 
-                className="btn" 
-                style={{ 
-                    marginTop: 0, padding: '0.5rem 1rem', width: 'auto', 
-                    background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', 
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', 
-                    fontSize: '0.75rem', cursor: 'default'
-                }}
+                className="btn btn-header btn-success" 
+                style={{ cursor: 'default' }}
             >
                 <BellRing size={18} /> Alerts On
             </button>
@@ -49,12 +44,7 @@ const NotificationToggle = ({ permission, onPermissionChange, onSubscribe }) => 
         return (
             <button 
                 onClick={() => alert('Please enable notifications in your browser settings.')}
-                className="btn" 
-                style={{ 
-                    marginTop: 0, padding: '0.5rem 1rem', width: 'auto', 
-                    background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', 
-                    display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem'
-                }}
+                className="btn btn-header btn-danger"
             >
                 <BellOff size={18} /> Blocked
             </button>
@@ -64,12 +54,7 @@ const NotificationToggle = ({ permission, onPermissionChange, onSubscribe }) => 
     return (
         <button 
             onClick={handleRequestPermission}
-            className="btn" 
-            style={{ 
-                marginTop: 0, padding: '0.5rem 1rem', width: 'auto', 
-                background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', 
-                display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem'
-            }}
+            className="btn btn-header btn-indigo"
         >
             <Bell size={18} /> Enable Alerts
         </button>
@@ -91,14 +76,7 @@ const SoundToggle = ({ enabled, onToggle }) => {
     return (
         <button 
             onClick={handleToggle}
-            className="btn" 
-            style={{ 
-                marginTop: 0, padding: '0.5rem 1rem', width: 'auto', 
-                background: enabled ? 'rgba(16, 185, 129, 0.15)' : 'rgba(148, 163, 184, 0.1)', 
-                color: enabled ? '#10b981' : '#94a3b8', 
-                display: 'flex', alignItems: 'center', gap: '0.5rem', 
-                fontSize: '0.75rem', transition: 'all 0.2s ease'
-            }}
+            className={`btn btn-header ${enabled ? 'btn-success' : 'btn-muted'}`}
         >
             {enabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
             {enabled ? 'Sound On' : 'Sound Off'}
@@ -131,17 +109,17 @@ const DashboardHeader = ({ currentUser, navigate, notifPermission, setNotifPermi
 
     return (
         <nav className="nav">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div className="header-title-container">
                 <ShieldCheck size={32} color="#818cf8" />
                 <div>
-                    <h2 style={{ fontSize: '1.25rem' }}>Admin Control Center</h2>
+                    <h2 className="header-title">Admin Control Center</h2>
                     <span className="role-badge role-admin">System Admin</span>
                 </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: '600' }}>{currentUser?.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{currentUser?.email}</div>
+            <div className="header-actions">
+                <div className="user-info">
+                    <div className="user-name">{currentUser?.name}</div>
+                    <div className="user-email">{currentUser?.email}</div>
                 </div>
                 <NotificationToggle 
                     permission={notifPermission}
@@ -154,16 +132,11 @@ const DashboardHeader = ({ currentUser, navigate, notifPermission, setNotifPermi
                 />
                 <button 
                     onClick={handleTestBG}
-                    className="btn"
-                    style={{ 
-                        marginTop: 0, padding: '0.5rem 1rem', width: 'auto', 
-                        background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8',
-                        display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem'
-                    }}
+                    className="btn btn-header btn-indigo"
                 >
                     <BellRing size={16} /> Test BG
                 </button>
-                <button onClick={handleLogout} className="btn" style={{ marginTop: 0, padding: '0.5rem 1rem', width: 'auto', background: 'rgba(239, 68, 68, 0.1)', color: '#f87171' }}>
+                <button onClick={handleLogout} className="btn btn-header btn-danger">
                     <LogOut size={18} />
                 </button>
             </div>

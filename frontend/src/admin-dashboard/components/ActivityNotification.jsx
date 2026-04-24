@@ -87,35 +87,14 @@ const ActivityNotification = () => {
             toast.custom((t) => (
                 <div 
                     onClick={() => toast.dismiss(t.id)}
-                    style={{
-                        backgroundColor: '#ffffff',
-                        padding: '12px 24px',
-                        borderRadius: '16px',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
-                        border: '1px solid #e2e8f0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        pointerEvents: 'auto',
-                        cursor: 'pointer',
-                        animation: 'slideIn 0.3s ease-out'
-                    }}
+                    className="custom-toast-container"
                 >
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '10px',
-                        background: 'rgba(99, 102, 241, 0.1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '20px'
-                    }}>
+                    <div className="custom-toast-icon">
                         🔔
                     </div>
                     <div>
-                        <span style={{ fontSize: '11px', color: '#6366f1', fontWeight: 'bold', display: 'block', textTransform: 'uppercase' }}>{data.action}</span>
-                        <span style={{ fontSize: '14px', color: '#1e293b', fontWeight: '600' }}>{data.userName}</span>
+                        <span className="custom-toast-action">{data.action}</span>
+                        <span className="custom-toast-user">{data.userName}</span>
                     </div>
                 </div>
             ), { position: 'top-right', duration: 5000 });

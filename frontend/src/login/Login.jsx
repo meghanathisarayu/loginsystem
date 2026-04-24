@@ -129,14 +129,14 @@ const Login = () => {
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Email Address</label>
-                        <div style={{ position: 'relative' }}>
-                            <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <div className="input-wrapper">
+                            <Mail size={18} className="input-icon-left" />
                             <input
                                 type="email"
                                 placeholder="name@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                style={{ paddingLeft: '40px' }}
+                                className="input-with-icon"
                                 required
                             />
                         </div>
@@ -144,38 +144,26 @@ const Login = () => {
 
                     <div className="form-group">
                         <label>Password</label>
-                        <div style={{ position: 'relative' }}>
-                            <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                        <div className="input-wrapper">
+                            <Lock size={18} className="input-icon-left" />
                             <input
                                 type={showPassword ? "text" : "password"}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                style={{ paddingLeft: '40px', paddingRight: '40px' }}
+                                className="input-with-icon-both"
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                style={{
-                                    position: 'absolute',
-                                    right: '12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    background: 'none',
-                                    border: 'none',
-                                    color: '#94a3b8',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    padding: '4px'
-                                }}
+                                className="password-toggle-btn"
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                         </div>
-                        <div style={{ textAlign: 'right', marginTop: '0.5rem' }}>
-                            <Link to="/forgot-password" style={{ fontSize: '0.875rem', color: '#818cf8', textDecoration: 'none' }}>
+                        <div className="forgot-password-container">
+                            <Link to="/forgot-password" className="forgot-password-link">
                                 Forgot Password?
                             </Link>
                         </div>
@@ -190,46 +178,21 @@ const Login = () => {
 
                 {/* PWA Install Section */}
                 {!isInstalled && (
-                    <div style={{ marginTop: '1.5rem' }}>
+                    <div className="install-app-container">
                         {isInstallable ? (
                             <button
                                 onClick={handleInstallClick}
-                                className="install-app-btn"
-                                style={{
-                                    width: '100%',
-                                    padding: '0.875rem 1rem',
-                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '10px',
-                                    fontSize: '0.9375rem',
-                                    fontWeight: '600',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '0.5rem',
-                                    transition: 'all 0.2s ease',
-                                    boxShadow: '0 4px 14px 0 rgba(16, 185, 129, 0.39)'
-                                }}
+                                className="btn-install-app"
                             >
                                 <Download size={20} />
                                 Install App
                             </button>
                         ) : (
-                            <div
-                                style={{
-                                    padding: '0.875rem 1rem',
-                                    background: 'rgba(99, 102, 241, 0.1)',
-                                    border: '1px solid rgba(99, 102, 241, 0.2)',
-                                    borderRadius: '10px',
-                                    textAlign: 'center'
-                                }}
-                            >
-                                <p style={{ color: '#818cf8', fontWeight: '600', marginBottom: '0.5rem' }}>
+                            <div className="manual-install-box">
+                                <p className="manual-install-title">
                                     📱 Install this App
                                 </p>
-                                <p style={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                                <p className="manual-install-text">
                                     Chrome: Click 3 dots → Install "My App"<br/>
                                     Safari: Share → Add to Home Screen
                                 </p>
@@ -239,22 +202,7 @@ const Login = () => {
                 )}
 
                 {isInstalled && (
-                    <div
-                        style={{
-                            marginTop: '1.5rem',
-                            padding: '0.875rem 1rem',
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            border: '1px solid rgba(16, 185, 129, 0.2)',
-                            borderRadius: '10px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
-                            color: '#10b981',
-                            fontSize: '0.9375rem',
-                            fontWeight: '600'
-                        }}
-                    >
+                    <div className="app-installed-box">
                         <Check size={20} />
                         App Installed
                     </div>

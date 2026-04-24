@@ -77,28 +77,16 @@ const AdminDashboard = () => {
             />
 
             {/* Tabs Navigation */}
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+            <div className="tabs-container">
                 <button
                     onClick={() => setActiveTab('users')}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        background: activeTab === 'users' ? 'rgba(129, 140, 248, 0.2)' : 'transparent',
-                        border: 'none', borderRadius: '8px',
-                        color: activeTab === 'users' ? '#818cf8' : '#94a3b8',
-                        fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
-                    }}
+                    className={`tab-btn ${activeTab === 'users' ? 'tab-btn-active' : 'tab-btn-inactive'}`}
                 >
                     <Users size={18} /> User Management
                 </button>
                 <button
                     onClick={() => setActiveTab('logs')}
-                    style={{
-                        padding: '0.75rem 1.5rem',
-                        background: activeTab === 'logs' ? 'rgba(129, 140, 248, 0.2)' : 'transparent',
-                        border: 'none', borderRadius: '8px',
-                        color: activeTab === 'logs' ? '#818cf8' : '#94a3b8',
-                        fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem'
-                    }}
+                    className={`tab-btn ${activeTab === 'logs' ? 'tab-btn-active' : 'tab-btn-inactive'}`}
                 >
                     <Activity size={18} /> Activity Logs
                 </button>

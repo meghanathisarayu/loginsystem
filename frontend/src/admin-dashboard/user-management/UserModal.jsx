@@ -32,7 +32,7 @@ const UserModal = ({ isOpen, onClose, formData, setFormData, showPassword, setSh
                     </div>
                     <div className="form-group">
                         <label>Password</label>
-                        <div style={{ position: 'relative' }}>
+                        <div className="input-wrapper">
                             <input 
                                 type={showPassword ? "text" : "password"} 
                                 required={!editingUser} 
@@ -43,7 +43,7 @@ const UserModal = ({ isOpen, onClose, formData, setFormData, showPassword, setSh
                             <button 
                                 type="button" 
                                 onClick={() => setShowPassword(!showPassword)}
-                                style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
+                                className="password-toggle-btn"
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -59,7 +59,7 @@ const UserModal = ({ isOpen, onClose, formData, setFormData, showPassword, setSh
                             <option value="admin">Admin</option>
                         </select>
                     </div>
-                    <button type="submit" className="btn" style={{ width: '100%', marginTop: '1rem' }}>
+                    <button type="submit" className="btn btn-full-width">
                         {editingUser ? 'Update User' : 'Create User'}
                     </button>
                 </form>

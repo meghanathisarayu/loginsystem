@@ -62,40 +62,40 @@ const ForgotPassword = () => {
     return (
         <div className="auth-container">
             <div className="glass-card">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', color: '#818cf8' }}>
+                <div className="auth-header-container">
                     <ShieldCheck size={28} />
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '700' }}>Account Recovery</h2>
+                    <h2 className="auth-header-title">Account Recovery</h2>
                 </div>
 
                 {error && <div className="error-msg">{error}</div>}
-                {message && !error && <div style={{ padding: '0.75rem', background: 'rgba(34, 197, 94, 0.1)', color: '#4ade80', borderRadius: '0.5rem', marginBottom: '1rem', fontSize: '0.875rem' }}>{message}</div>}
+                {message && !error && <div className="auth-success-msg">{message}</div>}
 
                 {step === 1 && (
                     <form onSubmit={handleSendOTP}>
-                        <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Enter your registered email to receive a 6-digit verification code.</p>
+                        <p className="auth-subtitle">Enter your registered email to receive a 6-digit verification code.</p>
                         <div className="form-group">
                             <label>Email Address</label>
-                            <div style={{ position: 'relative' }}>
-                                <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <div className="input-wrapper">
+                                <Mail size={18} className="input-icon-left" />
                                 <input
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     placeholder="your@email.com"
-                                    style={{ paddingLeft: '40px' }}
+                                    className="input-with-icon"
                                     required
                                 />
                             </div>
                         </div>
                         <button type="submit" className="btn" disabled={loading}>
-                            {loading ? 'Sending...' : 'Send OTP'} <Send size={18} style={{ marginLeft: '8px' }} />
+                            {loading ? 'Sending...' : 'Send OTP'} <Send size={18} className="btn-icon-right" />
                         </button>
                     </form>
                 )}
 
                 {step === 2 && (
                     <form onSubmit={handleVerifyOTP}>
-                        <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>We've sent a code to <b>{email}</b>. Verification is required to proceed.</p>
+                        <p className="auth-subtitle">We've sent a code to <b>{email}</b>. Verification is required to proceed.</p>
                         <div className="form-group">
                             <label>Enter 6-Digit OTP</label>
                             <input
@@ -104,14 +104,14 @@ const ForgotPassword = () => {
                                 value={otp}
                                 onChange={(e) => setOtp(e.target.value)}
                                 placeholder="123456"
-                                style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: '0.5rem' }}
+                                className="otp-input"
                                 required
                             />
                         </div>
                         <button type="submit" className="btn" disabled={loading}>
                             {loading ? 'Verifying...' : 'Verify OTP'}
                         </button>
-                        <button type="button" onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: '#818cf8', cursor: 'pointer', marginTop: '1rem', fontSize: '0.875rem' }}>
+                        <button type="button" onClick={() => setStep(1)} className="btn-link">
                             Change Email
                         </button>
                     </form>
@@ -119,28 +119,28 @@ const ForgotPassword = () => {
 
                 {step === 3 && (
                     <form onSubmit={handleResetPassword}>
-                        <p style={{ color: '#94a3b8', marginBottom: '1.5rem' }}>Identity verified! You can now set your new login password.</p>
+                        <p className="auth-subtitle">Identity verified! You can now set your new login password.</p>
                         <div className="form-group">
                             <label>New Password</label>
-                            <div style={{ position: 'relative' }}>
-                                <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                            <div className="input-wrapper">
+                                <Lock size={18} className="input-icon-left" />
                                 <input
                                     type="password"
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     placeholder="Enter new password"
-                                    style={{ paddingLeft: '40px' }}
+                                    className="input-with-icon"
                                     required
                                 />
                             </div>
                         </div>
                         <button type="submit" className="btn" disabled={loading}>
-                            {loading ? 'Updating...' : 'Set New Password' } <CheckCircle2 size={18} style={{ marginLeft: '8px' }} />
+                            {loading ? 'Updating...' : 'Set New Password' } <CheckCircle2 size={18} className="btn-icon-right" />
                         </button>
                     </form>
                 )}
 
-                <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#94a3b8', marginTop: '2rem', textDecoration: 'none', fontSize: '0.875rem' }}>
+                <Link to="/" className="back-to-login-link">
                    <ArrowLeft size={16} /> Back to Login
                 </Link>
             </div>

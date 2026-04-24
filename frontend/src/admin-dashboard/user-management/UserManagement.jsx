@@ -79,16 +79,16 @@ const UserManagement = ({ currentUser, refreshLogs }) => {
 
     return (
         <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: '600' }}>User Management</h3>
-                <button onClick={() => handleOpenModal()} className="btn" style={{ marginTop: 0, width: 'auto', padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <div className="section-header">
+                <h3 className="section-title">User Management</h3>
+                <button onClick={() => handleOpenModal()} className="btn btn-add-user">
                     <Plus size={18} /> Add New User
                 </button>
             </div>
 
             <div className="table-container">
                 {loading ? (
-                    <div style={{ padding: '3rem', textAlign: 'center', color: '#94a3b8' }}>Loading users...</div>
+                    <div className="loading-container">Loading users...</div>
                 ) : (
                     <table>
                         <thead>
@@ -103,14 +103,14 @@ const UserManagement = ({ currentUser, refreshLogs }) => {
                             {users.map(u => (
                                 <tr key={u.id}>
                                     <td>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <div className="action-buttons">
                                             <button onClick={() => handleOpenModal(u)} className="action-btn"><Edit2 size={16} /></button>
                                             <button onClick={() => handleDelete(u.id)} className="action-btn btn-delete"><Trash2 size={16} /></button>
                                         </div>
                                     </td>
                                     <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(129, 140, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <div className="user-name-cell">
+                                            <div className="user-avatar">
                                                 <User size={16} color="#818cf8" />
                                             </div>
                                             {u.name}

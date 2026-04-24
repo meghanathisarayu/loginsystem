@@ -43,30 +43,30 @@ const UserDashboard = () => {
 
             <div className="grid">
                 <div className="card">
-                    <User size={24} color="#4ade80" style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ marginBottom: '0.5rem' }}>My Profile</h3>
-                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Update your personal information and account security.</p>
+                    <User size={24} color="#4ade80" className="card-icon" />
+                    <h3 className="card-title">My Profile</h3>
+                    <p className="card-subtitle">Update your personal information and account security.</p>
                 </div>
                 <div className="card">
-                    <FileText size={24} color="#4ade80" style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ marginBottom: '0.5rem' }}>My Reports</h3>
-                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Access your personalized reports and activity history.</p>
+                    <FileText size={24} color="#4ade80" className="card-icon" />
+                    <h3 className="card-title">My Reports</h3>
+                    <p className="card-subtitle">Access your personalized reports and activity history.</p>
                 </div>
                 <div className="card">
-                    <Bell size={24} color="#4ade80" style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ marginBottom: '0.5rem' }}>Notifications</h3>
-                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Check your latest updates and system messages.</p>
+                    <Bell size={24} color="#4ade80" className="card-icon" />
+                    <h3 className="card-title">Notifications</h3>
+                    <p className="card-subtitle">Check your latest updates and system messages.</p>
                 </div>
                 <div className="card">
-                    <CreditCard size={24} color="#4ade80" style={{ marginBottom: '1rem' }} />
-                    <h3 style={{ marginBottom: '0.5rem' }}>Billing</h3>
-                    <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>Manage your subscription and payment methods.</p>
+                    <CreditCard size={24} color="#4ade80" className="card-icon" />
+                    <h3 className="card-title">Billing</h3>
+                    <p className="card-subtitle">Manage your subscription and payment methods.</p>
                 </div>
             </div>
 
-            <div style={{ marginTop: '2rem', padding: '2rem', background: 'rgba(74, 222, 128, 0.05)', borderRadius: '20px', border: '1px solid rgba(74, 222, 128, 0.1)' }}>
+            <div className="welcome-banner">
                 <h3>Welcome back, {user?.name.split(' ')[0]}!</h3>
-                <p style={{ color: '#94a3b8', marginTop: '0.5rem' }}>You have 4 new messages and 2 pending tasks.</p>
+                <p className="welcome-subtitle">You have 4 new messages and 2 pending tasks.</p>
             </div>
         </div>
     );
