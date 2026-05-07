@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Activity } from 'lucide-react';
+import { Users, Activity, ShieldCheck, LayoutDashboard } from 'lucide-react';
 import ActivityNotification from './components/ActivityNotification';
 import { subscribeToPushNotifications } from '../utils/push';
 import DashboardHeader from './components/DashboardHeader';
@@ -21,7 +21,6 @@ const AdminDashboard = () => {
     const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 
     useEffect(() => {
-        // Check notification permission
         if ('Notification' in window) {
             const perm = Notification.permission;
             setNotifPermission(perm);
@@ -29,11 +28,9 @@ const AdminDashboard = () => {
             else if (perm === 'granted') subscribeToPushNotifications();
         }
 
-        // Check sound preference
         const savedSound = localStorage.getItem('soundEnabled') === 'true';
         setSoundEnabled(savedSound);
 
-        // Mobile/PWA checks
         const mobileCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         setIsMobile(mobileCheck);
         const pwaCheck = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -49,55 +46,78 @@ const AdminDashboard = () => {
     }, []);
 
     return (
-        <div className="dashboard">
+        <div className="dashboard-wrapper">
             <ActivityNotification />
 
-            <DashboardHeader 
-                currentUser={currentUser}
-                navigate={navigate}
-                notifPermission={notifPermission}
-                setNotifPermission={setNotifPermission}
-                soundEnabled={soundEnabled}
-                setSoundEnabled={setSoundEnabled}
-                onSubscribe={subscribeToPushNotifications}
-            />
+            {/* Left Sidebar Navigation */}
+            <aside className="sidebar">
+                <div className="sidebar-brand">
+                    <ShieldCheck size={32} color="#4f46e5" />
+                    <span className="sidebar-brand-text">Admin Panel</span>
+                </div>
 
-            <StatusBanners 
-                isPwa={isPwa}
-                isMobile={isMobile}
-                showInstallPrompt={showInstallPrompt}
-                deferredPrompt={deferredPrompt}
-                setDeferredPrompt={setDeferredPrompt}
-                setShowInstallPrompt={setShowInstallPrompt}
-                showNotifModal={showNotifModal}
-                setShowNotifModal={setShowNotifModal}
-                notifPermission={notifPermission}
-                setNotifPermission={setNotifPermission}
-                onSubscribe={subscribeToPushNotifications}
-            />
+                <nav className="sidebar-nav">
+                    <button
+                        onClick={() => setActiveTab('users')}
+                        className={`sidebar-btn ${activeTab === 'users' ? 'sidebar-btn-active' : ''}`}
+                    >
+                        <Users size={20} /> 
+                        <span>User Management</span>
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('logs')}
+                        className={`sidebar-btn ${activeTab === 'logs' ? 'sidebar-btn-active' : ''}`}
+                    >
+                        <Activity size={20} /> 
+                        <span>Activity Logs</span>
+                    </button>
+                </nav>
 
-            {/* Tabs Navigation */}
-            <div className="tabs-container">
-                <button
-                    onClick={() => setActiveTab('users')}
-                    className={`tab-btn ${activeTab === 'users' ? 'tab-btn-active' : 'tab-btn-inactive'}`}
-                >
-                    <Users size={18} /> User Management
-                </button>
-                <button
-                    onClick={() => setActiveTab('logs')}
-                    className={`tab-btn ${activeTab === 'logs' ? 'tab-btn-active' : 'tab-btn-inactive'}`}
-                >
-                    <Activity size={18} /> Activity Logs
-                </button>
-            </div>
+                <div className="sidebar-footer">
+                    <button onClick={() => navigate('/user')} className="sidebar-btn">
+                        <LayoutDashboard size={20} />
+                        <span>User View</span>
+                    </button>
+                </div>
+            </aside>
 
-            {/* Tab Content */}
-            {activeTab === 'users' ? (
-                <UserManagement currentUser={currentUser} />
-            ) : (
-                <ActivityLogs />
-            )}
+            {/* Main Content Area */}
+            <main className="main-content">
+                <DashboardHeader 
+                    currentUser={currentUser}
+                    navigate={navigate}
+                    notifPermission={notifPermission}
+                    setNotifPermission={setNotifPermission}
+                    soundEnabled={soundEnabled}
+                    setSoundEnabled={setSoundEnabled}
+                    onSubscribe={subscribeToPushNotifications}
+                />
+
+                <div className="dashboard-content-area">
+                    <StatusBanners 
+                        isPwa={isPwa}
+                        isMobile={isMobile}
+                        showInstallPrompt={showInstallPrompt}
+                        deferredPrompt={deferredPrompt}
+                        setDeferredPrompt={setDeferredPrompt}
+                        setShowInstallPrompt={setShowInstallPrompt}
+                        showNotifModal={showNotifModal}
+                        setShowNotifModal={setShowNotifModal}
+                        notifPermission={notifPermission}
+                        setNotifPermission={setNotifPermission}
+                        onSubscribe={subscribeToPushNotifications}
+                    />
+
+                    {/* Tab Content Area */}
+                    <div className="tab-content">
+                        {activeTab === 'users' ? (
+                            <UserManagement currentUser={currentUser} />
+                        ) : (
+                            <ActivityLogs />
+                        )}
+                    </div>
+                </div>
+            </main>
         </div>
     );
 };

@@ -111,7 +111,7 @@ const UserManagement = ({ currentUser, refreshLogs }) => {
                                     <td>
                                         <div className="user-name-cell">
                                             <div className="user-avatar">
-                                                <User size={16} color="#818cf8" />
+                                                <User size={16} color="#4f46e5" />
                                             </div>
                                             {u.name}
                                         </div>

@@ -43,22 +43,22 @@ const UserDashboard = () => {
 
             <div className="grid">
                 <div className="card">
-                    <User size={24} color="#4ade80" className="card-icon" />
+                    <User size={24} color="#4f46e5" className="card-icon" />
                     <h3 className="card-title">My Profile</h3>
                     <p className="card-subtitle">Update your personal information and account security.</p>
                 </div>
                 <div className="card">
-                    <FileText size={24} color="#4ade80" className="card-icon" />
+                    <FileText size={24} color="#4f46e5" className="card-icon" />
                     <h3 className="card-title">My Reports</h3>
                     <p className="card-subtitle">Access your personalized reports and activity history.</p>
                 </div>
                 <div className="card">
-                    <Bell size={24} color="#4ade80" className="card-icon" />
+                    <Bell size={24} color="#4f46e5" className="card-icon" />
                     <h3 className="card-title">Notifications</h3>
                     <p className="card-subtitle">Check your latest updates and system messages.</p>
                 </div>
                 <div className="card">
-                    <CreditCard size={24} color="#4ade80" className="card-icon" />
+                    <CreditCard size={24} color="#4f46e5" className="card-icon" />
                     <h3 className="card-title">Billing</h3>
                     <p className="card-subtitle">Manage your subscription and payment methods.</p>
                 </div>

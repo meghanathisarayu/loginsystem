@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+require('dotenv').config();
 
 const { User } = require('./common-helpers/database-schemas');
 
 const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb://localhost:27017/login_system');
-        console.log('MongoDB Connected'); 
+        const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/login_system';
+        await mongoose.connect(uri);
+        console.log('MongoDB Connected to:', uri.split('@')[1] || 'localhost'); 
     } catch (error) {
         console.error('Error:', error);
         process.exit(1);

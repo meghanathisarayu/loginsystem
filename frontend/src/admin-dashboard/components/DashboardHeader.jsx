@@ -110,7 +110,7 @@ const DashboardHeader = ({ currentUser, navigate, notifPermission, setNotifPermi
     return (
         <nav className="nav">
             <div className="header-title-container">
-                <ShieldCheck size={32} color="#818cf8" />
+                <ShieldCheck size={32} color="#4f46e5" />
                 <div>
                     <h2 className="header-title">Admin Control Center</h2>
                     <span className="role-badge role-admin">System Admin</span>

@@ -5,7 +5,7 @@ const UserHeader = ({ user, handleLogout }) => {
     return (
         <nav className="nav">
             <div className="header-title-container">
-                <LayoutDashboard size={32} color="#4ade80" />
+                <LayoutDashboard size={32} color="#4f46e5" />
                 <div>
                     <h2 className="header-title">User Dashboard</h2>
                     <span className="role-badge role-user">Standard User</span>

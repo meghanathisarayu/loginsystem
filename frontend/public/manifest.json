@@ -4,12 +4,18 @@
   "description": "Admin Dashboard with real-time notifications",
   "start_url": "/",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
+  "display_override": [
+    "standalone",
+    "fullscreen"
+  ],
   "background_color": "#0f172a",
   "theme_color": "#6366f1",
   "lang": "en",
   "scope": "/",
-  "categories": ["productivity", "business"],
+  "categories": [
+    "productivity",
+    "business"
+  ],
   "orientation": "portrait-primary",
   "icons": [
     {
